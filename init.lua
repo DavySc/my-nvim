@@ -1,4 +1,4 @@
-print("hello")
+print("G'day sir!")
 
 require("config.lazy")
 
