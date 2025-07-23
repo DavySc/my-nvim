@@ -1,4 +1,3 @@
-
 return {
   {
     'neovim/nvim-lspconfig',
@@ -13,29 +12,30 @@ return {
       -- Mason setup
       require('mason').setup()
 
-      -- LSP setup for OCaml
-      require('lspconfig').ocamllsp.setup({})
+      -- LSP setup for Haskell
+      require('lspconfig').hls.setup({})
 
-      -- Treesitter configuration
+      -- Treesitter configuration for Haskell
       require('nvim-treesitter.configs').setup {
-        ensure_installed = { 'ocaml' },
+        ensure_installed = { 'haskell' },
         highlight = { enable = true },
+        indent = { enable = true },
+        auto_install = true,
       }
 
-      -- conform.nvim for formatting with ocamlformat
+      -- conform.nvim for formatting with ormolu
       require('conform').setup({
         formatters_by_ft = {
-          ocaml = { 'ocamlformat' },
+          haskell = { 'ormolu' },
         },
-        formatters = {
-          ocamlformat = {
-            prepend_args = {
-              '--if-then-else', 'vertical',
-              '--break-cases', 'fit-or-vertical',
-              '--type-decl', 'sparse',
-            },
-          },
-        },
+        -- If you want to pass specific flags to ormolu:
+        -- formatters = {
+        --   ormolu = {
+        --     prepend_args = {
+        --       "--color", "always"
+        --     },
+        --   },
+        -- },
       })
 
       -- Keybindings for Telescope fuzzy finder
@@ -47,4 +47,5 @@ return {
     end,
   },
 }
+
 
