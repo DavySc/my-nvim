@@ -11,7 +11,7 @@ vim.keymap.set("v", "<space>x", ":.lua<CR>")
 
 vim.opt.number = true
 vim.opt.relativenumber = true
-vim.opt.wrap = false
+vim.opt.wrap = true
 
 vim.opt.termguicolors = true
 vim.api.nvim_create_autocmd('TextYankPost', {

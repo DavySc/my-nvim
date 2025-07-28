@@ -12,8 +12,9 @@ return {
       -- Mason setup
       require('mason').setup()
 
+      local capabilities = require('cmp_nvim_lsp').default_capabilities()
       -- LSP setup for Haskell
-      require('lspconfig').hls.setup({})
+      require('lspconfig').hls.setup({capabilities = capabilities,})
 
       -- Treesitter configuration for Haskell
       require('nvim-treesitter.configs').setup {
