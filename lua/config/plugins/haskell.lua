@@ -47,6 +47,7 @@ return {
       vim.api.nvim_set_keymap('n', '<leader>fm', '<cmd>Telescope marks<cr>', opts)
     end,
   },
+
 }
 
 
