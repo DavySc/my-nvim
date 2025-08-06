@@ -4,7 +4,6 @@ return {
     dependencies = {
       'williamboman/mason.nvim',
       'nvim-lua/plenary.nvim',
-      'nvim-telescope/telescope.nvim',
       'nvim-treesitter/nvim-treesitter',
       'stevearc/conform.nvim',
     },
@@ -40,12 +39,6 @@ return {
         },
       })
 
-      -- Telescope keybindings
-      local opts = { noremap = true, silent = true }
-      vim.api.nvim_set_keymap('n', '<leader>ff', '<cmd>Telescope find_files<cr>', opts)
-      vim.api.nvim_set_keymap('n', '<leader>fg', '<cmd>Telescope live_grep<cr>', opts)
-      vim.api.nvim_set_keymap('n', '<leader>fb', '<cmd>Telescope buffers<cr>', opts)
-      vim.api.nvim_set_keymap('n', '<leader>fm', '<cmd>Telescope marks<cr>', opts)
     end,
   },
 }
