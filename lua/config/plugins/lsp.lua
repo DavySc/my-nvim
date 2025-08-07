@@ -24,11 +24,13 @@ return {
 
       -- Treesitter configuration for Haskell, C, and C++
       require('nvim-treesitter.configs').setup {
-        ensure_installed = { 'haskell','html','css', 'cpp', 'c', 'regex', 'tsx', 'javascript'}, -- add other languages as needed
+        ensure_installed = {'rust', 'haskell','html','css', 'cpp', 'c', 'regex', 'tsx', 'javascript'}, -- add other languages as needed
         highlight = { enable = true },
         indent = { enable = true },
         auto_install = true,
       }
+      
+      require('lspconfig').rust_analyzer.setup({capabilities = capabilities})
 
       -- Formatters: ormolu for Haskell and clang-format for C/C++
       require('conform').setup({
@@ -36,6 +38,7 @@ return {
           haskell = { 'ormolu' },
           cpp = { 'clang_format' },
           c = { 'clang_format' },
+	  rust = { 'rustfmt' },
         },
       })
 
