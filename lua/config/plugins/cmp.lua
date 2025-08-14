@@ -1,16 +1,16 @@
 return {
-  -- Main completion engine
   {
     "hrsh7th/nvim-cmp",
     dependencies = {
-      -- Snippet engine
       "L3MON4D3/LuaSnip",
-      -- Completion sources
       "hrsh7th/cmp-nvim-lsp",
       "hrsh7th/cmp-buffer",
       "hrsh7th/cmp-path",
       "saadparwaiz1/cmp_luasnip",
       "rafamadriz/friendly-snippets",
+      -- Optional TS niceties:
+      -- "David-Kunz/cmp-npm",
+      -- "ray-x/cmp-treesitter",
     },
     config = function()
       local cmp = require("cmp")
@@ -23,6 +23,10 @@ return {
             luasnip.lsp_expand(args.body)
           end,
         },
+        window = {
+          completion = cmp.config.window.bordered(),
+          documentation = cmp.config.window.bordered(),
+        },
         mapping = cmp.mapping.preset.insert({
           ["<C-Space>"] = cmp.mapping.complete(),
           ["<CR>"] = cmp.mapping.confirm({ select = true }),
@@ -34,7 +38,7 @@ return {
             else
               fallback()
             end
-          end, {"i", "s"}),
+          end, { "i", "s" }),
           ["<S-Tab>"] = cmp.mapping(function(fallback)
             if cmp.visible() then
               cmp.select_prev_item()
@@ -43,16 +47,21 @@ return {
             else
               fallback()
             end
-          end, {"i", "s"}),
+          end, { "i", "s" }),
         }),
         sources = cmp.config.sources({
           { name = "nvim_lsp" },
           { name = "luasnip" },
+          { name = "path" }, -- now active
+          -- { name = "npm", keyword_length = 3 }, -- if cmp-npm installed
         }, {
           { name = "buffer" },
         }),
+        completion = {
+          completeopt = "menu,menuone,noinsert",
+          keyword_length = 1,
+        },
       })
     end
   },
 }
-
