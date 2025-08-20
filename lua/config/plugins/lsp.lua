@@ -41,6 +41,7 @@ return {
      require('lspconfig').eslint.setup({
        capabilities = capabilities,
      })
+     
 
       -- Treesitter configuration for Haskell, C, and C++
       require('nvim-treesitter.configs').setup {
