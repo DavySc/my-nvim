@@ -2,7 +2,7 @@ print("G'day sir!")
 
 require("config.lazy")
 
-vim.opt.shiftwidth = 4
+vim.opt.shiftwidth = 2
 -- execution keymaps
 vim.keymap.set("n", "<space><space>x", "<cmd>source %<CR>")
 vim.keymap.set("n", "<space>x", ":.lua<CR>")
