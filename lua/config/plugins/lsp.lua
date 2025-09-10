@@ -28,7 +28,7 @@ return {
 
       -- Treesitter configuration for Haskell, C, and C++
       require('nvim-treesitter.configs').setup {
-        ensure_installed = { 'markdown', 'markdown_inline', 'rust', 'haskell','html','css', 'cpp', 'c', 'regex', 'tsx' }, -- add other languages as needed
+        ensure_installed = {'asm', 'markdown', 'markdown_inline', 'rust', 'haskell','html','css', 'cpp', 'c', 'regex', 'tsx' }, -- add other languages as needed
         highlight = { enable = true },
         indent = { enable = true },
         auto_install = true,
