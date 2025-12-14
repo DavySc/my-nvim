@@ -8,43 +8,49 @@ return {
       'stevearc/conform.nvim',
     },
     config = function()
-      -- Mason setup
+      -- Mason setup (Ensure 'zls' is installed here if not using system package manager)
       require('mason').setup()
 
       local capabilities = require('cmp_nvim_lsp').default_capabilities()
+      local lspconfig = require('lspconfig')
 
-      -- Haskell LSP
-      require('lspconfig').hls.setup({capabilities = capabilities,})
-
-      -- C++ (and WASM via clangd) LSP
-      require('lspconfig').clangd.setup({
+      -- Zig LSP (zls)
+      -- Ensure 'zls' is installed on your system or via Mason
+      lspconfig.zls.setup({
         capabilities = capabilities,
-        -- Optionally, add cmd = { "clangd", "--compile-commands-dir=build" }, if needed
       })
 
-     
+      -- Haskell LSP
+      lspconfig.hls.setup({ capabilities = capabilities })
 
-      require('lspconfig').verible.setup{cmd = { 'verible-verilog-ls' }, filetypes = {"systemverilog"},}
+      -- C++ (and WASM via clangd) LSP
+      lspconfig.clangd.setup({
+        capabilities = capabilities,
+      })
 
-      -- Treesitter configuration for Haskell, C, and C++
+
+      -- Treesitter configuration
       require('nvim-treesitter.configs').setup {
-        ensure_installed = {'asm', 'markdown', 'markdown_inline', 'rust', 'haskell','html','css', 'cpp', 'c', 'regex' }, -- add other languages as needed
+        -- Added 'zig', removed 'asm' (optional, add back if you read assembly often)
+        ensure_installed = { 
+            'markdown', 'markdown_inline', 'rust', 'haskell', 
+            'html', 'css', 'cpp', 'c', 'regex', 'zig' 
+        },
         highlight = { enable = true },
         indent = { enable = true },
         auto_install = true,
       }
-      
 
-      -- Formatters: ormolu for Haskell and clang-format for C/C++
+      -- Formatters
       require('conform').setup({
         formatters_by_ft = {
           haskell = { 'ormolu' },
           cpp = { 'clang_format' },
           c = { 'clang_format' },
-	  rust = { 'rustfmt' },
+          rust = { 'rustfmt' },
+          zig = { 'zigfmt' }, -- Uses the built-in 'zig fmt'
         },
       })
-
     end,
   },
 }
