@@ -7,7 +7,7 @@ vim.opt.shiftwidth = 4
 vim.keymap.set("n", "<space><space>x", "<cmd>source %<CR>")
 vim.keymap.set("n", "<space>x", ":.lua<CR>")
 vim.keymap.set("v", "<space>x", ":.lua<CR>")
-vim.keymap.set("n", "<leader>pv", "<CMD>Oil<CR>", { desc = "Open parent directory" })
+vim.keymap.set("n", "<leader>pv", ":Ex<CR>")
 
 vim.opt.number = true
 vim.opt.relativenumber = true
