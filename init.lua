@@ -14,6 +14,12 @@ vim.opt.relativenumber = true
 vim.opt.wrap = false
 vim.opt.clipboard = "unnamedplus"
 
+-- 1. Remove the banner (cleaner view)
+vim.g.netrw_banner = 0
+
+-- 2. Tree View Style (3 = tree)
+vim.g.netrw_liststyle = 3
+
 
 vim.opt.termguicolors = true
 vim.api.nvim_create_autocmd('TextYankPost', {
