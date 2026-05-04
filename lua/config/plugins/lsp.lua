@@ -8,47 +8,49 @@ return {
       'stevearc/conform.nvim',
     },
     config = function()
-      -- Mason setup (Ensure 'zls' is installed here if not using system package manager)
       require('mason').setup()
-
       local capabilities = require('cmp_nvim_lsp').default_capabilities()
       local lspconfig = require('lspconfig')
 
-      -- Zig LSP (zls)
-      -- Ensure 'zls' is installed on your system or via Mason
-      lspconfig.zls.setup({
+      -- Python LSP for z3-solver bindings (pip install z3-solver)
+      -- Pyright gives you type inference, go-to-def, and hover docs on z3.* calls
+      lspconfig.pyright.setup({
         capabilities = capabilities,
+        settings = {
+          python = {
+            analysis = {
+              typeCheckingMode = "basic",        -- "strict" if you want more noise
+              autoSearchPaths = true,
+              useLibraryCodeForTypes = true,     -- resolves z3 stubs
+            },
+          },
+        },
       })
 
-      -- Haskell LSP
-      lspconfig.hls.setup({ capabilities = capabilities })
+      -- SMT-LIB2 (.smt2 / .z3) — no dedicated LSP exists, but
+      -- nvim-lspconfig has no server for it; rely on Treesitter + syntax only.
 
-      -- C++ (and WASM via clangd) LSP
-      lspconfig.clangd.setup({
-        capabilities = capabilities,
-      })
-
-
-      -- Treesitter configuration
+      -- Treesitter
       require('nvim-treesitter.configs').setup {
-        -- Added 'zig', removed 'asm' (optional, add back if you read assembly often)
-        ensure_installed = { 
-            'markdown', 'markdown_inline', 'rust', 'haskell', 
-            'html', 'css', 'cpp', 'c', 'regex', 'zig' 
+        ensure_installed = {
+          'markdown', 'markdown_inline',
+          'python',          -- for z3-solver scripts
+          'cpp', 'c',        -- z3 C/C++ API if you use it
+          'regex',
+          -- 'smtlib' is not in the mainline parser set yet;
+          -- install manually if you find a community grammar
         },
         highlight = { enable = true },
-        indent = { enable = true },
+        indent    = { enable = true },
         auto_install = true,
       }
 
       -- Formatters
       require('conform').setup({
         formatters_by_ft = {
-          haskell = { 'ormolu' },
-          cpp = { 'clang_format' },
-          c = { 'clang_format' },
-          rust = { 'rustfmt' },
-          zig = { 'zigfmt' }, -- Uses the built-in 'zig fmt'
+          python = { 'black' },     -- or 'ruff_format' if you prefer ruff
+          cpp    = { 'clang_format' },
+          c      = { 'clang_format' },
         },
       })
     end,
