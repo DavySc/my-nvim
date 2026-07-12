@@ -2,8 +2,8 @@
 -- Update with :lua vim.pack.update()   Remove: delete the line + :lua vim.pack.del()
 
 vim.pack.add({
-  -- Theme (pinned: newer commits assume a newer nightly than installed, e.g. 'pumborder')
-  { src = "https://github.com/catppuccin/nvim", name = "catppuccin", version = "cb5665990a797b102715188e73c44c3931b3b42e" },
+  -- Theme
+  { src = "https://github.com/catppuccin/nvim", name = "catppuccin" },
 
   -- Library
   "https://github.com/nvim-lua/plenary.nvim",
@@ -20,8 +20,7 @@ vim.pack.add({
   -- LSP / tooling
   "https://github.com/neovim/nvim-lspconfig",
   "https://github.com/williamboman/mason.nvim",
-  -- pinned to master: the new default 'main' branch has a different, incompatible API
-  { src = "https://github.com/nvim-treesitter/nvim-treesitter", version = "master" },
+  "https://github.com/nvim-treesitter/nvim-treesitter",
   "https://github.com/stevearc/conform.nvim",
 
   -- Languages
@@ -123,19 +122,22 @@ vim.api.nvim_create_autocmd("LspAttach", {
   end,
 })
 
--- ── Treesitter ──────────────────────────────────────────────────────────
-require("nvim-treesitter.configs").setup({
-  ensure_installed = {
-    "lua", "luadoc",
-    "markdown", "markdown_inline",
-    "html", "css",
-    "javascript", "typescript", "tsx",
-    "python", "rust",
-    "vimdoc", "query",
-  },
-  highlight = { enable = true },
-  indent = { enable = true },
-  auto_install = true,
+-- ── Treesitter (main branch; needs tree-sitter-cli on PATH) ─────────────
+require("nvim-treesitter").install({
+  "lua", "luadoc",
+  "markdown", "markdown_inline",
+  "html", "css",
+  "javascript", "typescript", "tsx",
+  "python", "rust",
+  "vimdoc", "query",
+})
+vim.api.nvim_create_autocmd("FileType", {
+  desc = "Start treesitter highlighting + indentation when a parser exists",
+  callback = function(ev)
+    if pcall(vim.treesitter.start, ev.buf) then
+      vim.bo[ev.buf].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+    end
+  end,
 })
 
 -- ── Formatting ──────────────────────────────────────────────────────────
