@@ -109,6 +109,10 @@ ensure_tools({
   codelldb = "codelldb",
   ["lua-language-server"] = "lua-language-server",
   stylua = "stylua",
+  ["nil"] = "nil",
+  nixfmt = "nixfmt",
+  ["haskell-language-server"] = "haskell-language-server-wrapper",
+  fourmolu = "fourmolu",
 })
 local capabilities = require("cmp_nvim_lsp").default_capabilities()
 
@@ -152,7 +156,36 @@ vim.lsp.config("clangd", {
   },
 })
 
-vim.lsp.enable({ "lua_ls", "clangd" })
+-- Nix. `nil` (mason has no nixd) gives diagnostics, completion, go-to-def and
+-- rename. Formatting is left to conform (nixfmt), so nil's own is unused.
+vim.lsp.config("nil_ls", {
+  settings = { ["nil"] = { formatting = { command = { "nixfmt" } } } },
+})
+
+-- Haskell (and Clash, which is plain Haskell under the hood). Widen past
+-- nvim-lspconfig's default filetypes so .cabal files get diagnostics too.
+-- Formatting is left to conform (fourmolu), so HLS's own is unused.
+-- HLS must be built against the same GHC as the project. In a flake project
+-- run it through `nix develop` so it sees the flake's ghc/cabal/HLS (nvim
+-- itself usually isn't started from inside the dev shell); otherwise use PATH.
+vim.lsp.config("hls", {
+  filetypes = { "haskell", "lhaskell", "cabal" },
+  cmd = function(dispatchers, config)
+    local root = config.root_dir
+    local cmd = { "haskell-language-server-wrapper", "--lsp" }
+    if root and not vim.env.IN_NIX_SHELL and vim.uv.fs_stat(root .. "/flake.nix") then
+      cmd = vim.list_extend({ "nix", "develop", root, "--command" }, cmd)
+    end
+    return vim.lsp.rpc.start(cmd, dispatchers, { cwd = root })
+  end,
+  -- Semantic tokens (off by default in HLS) stand in for treesitter
+  -- highlighting, which is disabled for Haskell (see the FileType autocmd).
+  settings = {
+    haskell = { plugin = { semanticTokens = { globalOn = true } } },
+  },
+})
+
+vim.lsp.enable({ "lua_ls", "clangd", "nil_ls", "hls" })
 
 -- clang-tidy findings are worth reading inline; the default only shows signs.
 vim.diagnostic.config({
@@ -213,6 +246,7 @@ end
 require("nvim-treesitter").install({
   "lua", "luadoc",
   "markdown", "markdown_inline",
+  "nix",
   "sql",
   -- C/C++: doxygen is injected into /** */ comments, printf into format
   -- strings, cmake/make for the build files.
@@ -223,6 +257,10 @@ require("nvim-treesitter").install({
 vim.api.nvim_create_autocmd("FileType", {
   desc = "Start treesitter highlighting + indentation when a parser exists",
   callback = function(ev)
+    -- tree-sitter-haskell's scanner corrupts the heap (glibc "corrupted size vs.
+    -- prev_size" aborts while editing), so Haskell gets regex syntax plus HLS
+    -- semantic tokens instead.
+    if ev.match == "haskell" or ev.match == "lhaskell" then return end
     if pcall(vim.treesitter.start, ev.buf) then
       vim.bo[ev.buf].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
     end
@@ -233,11 +271,14 @@ vim.api.nvim_create_autocmd("FileType", {
 require("conform").setup({
   formatters_by_ft = {
     lua = { "stylua" },
+    nix = { "nixfmt" },
     c = { "clang-format" },
     cpp = { "clang-format" },
     cuda = { "clang-format" },
     objc = { "clang-format" },
     objcpp = { "clang-format" },
+    haskell = { "fourmolu" },
+    lhaskell = { "fourmolu" },
   },
   format_on_save = function(bufnr)
     -- clang-format always has an opinion: with no .clang-format in the tree it
@@ -361,7 +402,8 @@ require("snacks").setup({
   input = { enabled = true },
   picker = { enabled = true },
   notifier = { enabled = true },
-  quickfile = { enabled = true },
+  -- exclude haskell: its treesitter parser corrupts the heap (see FileType autocmd)
+  quickfile = { enabled = true, exclude = { "haskell" } },
   scope = { enabled = true },
   scroll = { enabled = true },
   statuscolumn = { enabled = true },
@@ -438,7 +480,7 @@ vim.keymap.set("n", "<leader>gB", function() Snacks.gitbrowse() end, { desc = "O
 require("which-key").setup({ delay = 400 })
 require("which-key").add({
   { "<leader>g", group = "git" },
-  { "<leader>m", group = "make (C/C++)" },
+  { "<leader>m", group = "make (C/C++, Haskell/Clash)" },
   { "<leader>h", group = "hunks", mode = { "n", "v" } },
   { "<leader>d", group = "debug" },
   { "<leader>f", group = "find" },
