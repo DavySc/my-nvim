@@ -12,6 +12,10 @@
       "rev": "78c2ecd659d54972be17aa6ba2deac3c53223b80",
       "src": "https://github.com/p00f/clangd_extensions.nvim"
     },
+    "claudecode.nvim": {
+      "rev": "2390c6e45c4789072c293ac69de051d169668b29",
+      "src": "https://github.com/coder/claudecode.nvim"
+    },
     "cmp-buffer": {
       "rev": "b74fab3656eea9de20a9b8116afa3cfc4ec09657",
       "src": "https://github.com/hrsh7th/cmp-buffer"

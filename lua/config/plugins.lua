@@ -45,6 +45,9 @@ vim.pack.add({
 
   -- Keymap discoverability
   "https://github.com/folke/which-key.nvim",
+
+  -- AI: Claude Code in a side terminal, wired to the editor (selections, diffs)
+  "https://github.com/coder/claudecode.nvim",
 })
 
 -- ── Theme ───────────────────────────────────────────────────────────────
@@ -185,7 +188,25 @@ vim.lsp.config("hls", {
   },
 })
 
-vim.lsp.enable({ "lua_ls", "clangd", "nil_ls", "hls" })
+-- Rust. Like HLS, rust-analyzer must match the project's toolchain (its
+-- proc-macro server is tied to rustc's version), so in a flake project it runs
+-- through `nix develop` to get the flake's rust-analyzer/cargo/RUST_SRC_PATH;
+-- otherwise PATH (rustup). Formatting falls through conform to the LSP (rustfmt).
+vim.lsp.config("rust_analyzer", {
+  cmd = function(dispatchers, config)
+    local root = config.root_dir
+    local cmd = { "rust-analyzer" }
+    if root and not vim.env.IN_NIX_SHELL and vim.uv.fs_stat(root .. "/flake.nix") then
+      cmd = vim.list_extend({ "nix", "develop", root, "--command" }, cmd)
+    end
+    return vim.lsp.rpc.start(cmd, dispatchers, { cwd = root })
+  end,
+  settings = {
+    ["rust-analyzer"] = { check = { command = "clippy" } },
+  },
+})
+
+vim.lsp.enable({ "lua_ls", "clangd", "nil_ls", "hls", "rust_analyzer" })
 
 -- clang-tidy findings are worth reading inline; the default only shows signs.
 vim.diagnostic.config({
@@ -252,6 +273,7 @@ require("nvim-treesitter").install({
   -- strings, cmake/make for the build files.
   "c", "cpp", "doxygen", "printf", "cmake", "make",
   "souffle",
+  "rust", "toml",
   "vimdoc", "query",
 })
 vim.api.nvim_create_autocmd("FileType", {
@@ -486,4 +508,44 @@ require("which-key").add({
   { "<leader>f", group = "find" },
   { "<leader>x", group = "diagnostics" },
   { "<leader>c", group = "code" },
+  { "<leader>a", group = "ai (Claude)", mode = { "n", "v" } },
 })
+
+-- ── AI: Claude Code (claudecode.nvim) ───────────────────────────────────
+-- Claude runs in a snacks split and talks to nvim over the IDE protocol: it sees
+-- the current selection, and proposed edits open as diffs (:w / <leader>aa
+-- accepts, :q / <leader>ad rejects). Claude reads the project's CLAUDE.md, so a
+-- repo can set its tone (e.g. "hint, don't solve").
+require("claudecode").setup({ terminal = { provider = "snacks", split_width_percentage = 0.38 } })
+
+vim.keymap.set("n", "<leader>ac", "<cmd>ClaudeCode<cr>", { desc = "Toggle Claude" })
+vim.keymap.set("n", "<leader>af", "<cmd>ClaudeCodeFocus<cr>", { desc = "Focus Claude" })
+vim.keymap.set("n", "<leader>aC", "<cmd>ClaudeCode --continue<cr>", { desc = "Continue last session" })
+vim.keymap.set("n", "<leader>ab", "<cmd>ClaudeCodeAdd %<cr>", { desc = "Add buffer to context" })
+vim.keymap.set("n", "<leader>aa", "<cmd>ClaudeCodeDiffAccept<cr>", { desc = "Accept diff" })
+vim.keymap.set("n", "<leader>ad", "<cmd>ClaudeCodeDiffDeny<cr>", { desc = "Reject diff" })
+vim.keymap.set("v", "<leader>as", "<cmd>ClaudeCodeSend<cr>", { desc = "Send selection (ask your own)" })
+
+-- Select, press a key, get an answer: send the selection as an @-mention, then
+-- type a canned question after it. The mention is delivered asynchronously over
+-- the websocket, hence the short delay before the question.
+local function ask_about_selection(question)
+  return function()
+    if not require("claudecode").is_claude_connected() then
+      vim.cmd("ClaudeCode")
+      vim.notify("Claude is starting; select again once it's up", vim.log.levels.INFO)
+      return
+    end
+    vim.cmd("ClaudeCodeSend")
+    vim.defer_fn(function() require("claudecode.terminal").send_to_terminal(question) end, 300)
+  end
+end
+vim.keymap.set("v", "<leader>ae", ask_about_selection(
+  "Explain this code: what it does, step by step, and which language concepts it relies on (with where to read more). Don't change anything."
+), { desc = "Explain selection" })
+vim.keymap.set("v", "<leader>ar", ask_about_selection(
+  "Suggest a refactor of this code to make it more idiomatic and clearer. Propose it as an edit and explain each change and why."
+), { desc = "Refactor selection" })
+vim.keymap.set("v", "<leader>at", ask_about_selection(
+  "I'm learning this language. Give me one or two short tips about this code: an idiom, a pitfall, or a concept worth studying next."
+), { desc = "Learning tips for selection" })
