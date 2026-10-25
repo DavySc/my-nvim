@@ -28,8 +28,12 @@ local M = {}
 local specs = {}
 ---@type string[] in declaration order
 local order = {}
+-- Kept across a config reload (lua/config/reload.lua): what is on
+-- 'runtimepath' stays there, and the old searcher must come out.
+_G.__config_lazy = _G.__config_lazy or { loaded = {} }
+local state = _G.__config_lazy
 ---@type table<string, boolean>
-local loaded = {}
+local loaded = state.loaded
 ---@type table<string, string> top-level Lua module -> plugin name
 local owners = {}
 
@@ -63,6 +67,10 @@ function M.add(spec)
   return name
 end
 
+local function opt_path(name)
+  return vim.fn.stdpath("data") .. "/site/pack/core/opt/" .. name
+end
+
 local function source_after(path)
   -- :packadd sources plugin/ but not after/plugin/ once startup has passed
   -- load-plugins; before that, startup itself sources them.
@@ -82,12 +90,17 @@ function M.load(name)
   end
   loaded[name] = true
   vim.cmd.packadd(name)
-  local path = vim.fn.stdpath("data") .. "/site/pack/core/opt/" .. name
-  source_after(path)
+  source_after(opt_path(name))
   if spec.config then
     local ok, err = pcall(spec.config)
     if not ok then vim.notify("lazy: config of " .. name .. " failed: " .. err, vim.log.levels.ERROR) end
   end
+end
+
+--- Plugins loaded so far, and declared in all.
+---@return integer loaded, integer count
+function M.stats()
+  return vim.tbl_count(loaded), #order
 end
 
 --- Whether `name` has been loaded.
@@ -174,13 +187,14 @@ function M.install()
       end
     end,
   })
-  local list_ = {}
+  local list_, seen = {}, {}
   for _, name in ipairs(order) do
     local s = specs[name]
     list_[#list_ + 1] = { src = s.src, name = name, version = s.version }
   end
   vim.pack.add(list_, {
     load = function(plug)
+      seen[plug.spec.name] = true
       local spec = specs[plug.spec.name]
       if spec.lazy == false then
         vim.cmd.packadd({ plug.spec.name, bang = vim.v.vim_did_init == 0 })
@@ -191,10 +205,38 @@ function M.install()
       end
     end,
   })
-  table.insert(package.loaders, searcher)
+  -- On a reload vim.pack.add skips the plugins it already added, so do here
+  -- what its load callback would have.
   for _, name in ipairs(order) do
     local spec = specs[name]
-    if spec.lazy == false and spec.config then spec.config() end
+    if not seen[name] and not loaded[name] then
+      if spec.lazy == false then
+        vim.cmd.packadd(name)
+        source_after(opt_path(name))
+        loaded[name] = true
+      else
+        register_modules(name, opt_path(name))
+        set_triggers(name, spec)
+      end
+    end
+  end
+  for i, s in ipairs(package.loaders) do
+    if s == state.searcher then
+      table.remove(package.loaders, i)
+      break
+    end
+  end
+  state.searcher = searcher
+  table.insert(package.loaders, searcher)
+  -- Eager plugins, and on a reload the lazy ones loaded already. (A plugin a
+  -- config loads on the way ran its config in M.load.)
+  local configure = vim.deepcopy(loaded)
+  for _, name in ipairs(order) do
+    local spec = specs[name]
+    if configure[name] and spec.config then
+      local ok, err = pcall(spec.config)
+      if not ok then vim.notify("lazy: config of " .. name .. " failed: " .. err, vim.log.levels.ERROR) end
+    end
   end
 end
 

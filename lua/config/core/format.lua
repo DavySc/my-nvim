@@ -50,6 +50,7 @@ function M.setup()
   -- conform's own format_on_save is registered by setup(), too late for the
   -- save that loads it, so the autocmd lives here instead.
   vim.api.nvim_create_autocmd("BufWritePre", {
+    group = vim.api.nvim_create_augroup("config-format", { clear = true }),
     desc = "Format on save",
     callback = function(ev)
       local guard = guards[vim.bo[ev.buf].filetype]

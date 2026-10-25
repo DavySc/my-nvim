@@ -35,6 +35,14 @@ local function open(file)
   return vim.api.nvim_get_current_buf()
 end
 
+-- The dashboard renders (it opens on UIEnter, which headless never fires).
+-- Its default "startup" section needs lazy.nvim, which isn't here (PR-1).
+check("dashboard opens", pcall(function() Snacks.dashboard.open() end))
+vim.cmd("enew")
+
+check("<C-n> multicursor key only on 0.13+",
+  (vim.fn.maparg("<C-n>", "n") ~= "") == (vim.fn.has("nvim-0.13") == 1))
+
 -- Startup leaves the heavy plugins alone.
 for _, name in ipairs({ "nvim-cmp", "neogit", "nvim-dap", "claudecode.nvim", "conform.nvim", "trouble.nvim" }) do
   check("not loaded at startup: " .. name, not lazy.is_loaded(name))
@@ -94,7 +102,10 @@ end
 if machine.langs.org then
   open("b.org")
   check("orgmode loaded with org", lazy.is_loaded("orgmode"))
-  check("<leader>oe runs blocks in org buffers", vim.fn.maparg("<leader>oe", "n", false, true).buffer == 1)
+  check("<leader>obe runs blocks in org buffers", vim.fn.maparg("<leader>obe", "n", false, true).buffer == 1)
+  -- orgmode's own <leader>oe (export) must not be shadowed.
+  check("<leader>oe is still orgmode's export", (vim.fn.maparg("<leader>oe", "n", false, true).desc or ""):find("export") ~= nil,
+    vim.fn.maparg("<leader>oe", "n", false, true).desc)
 end
 if machine.langs.csharp then
   check("roslyn.nvim loaded with C#", lazy.is_loaded("roslyn.nvim"))

@@ -38,9 +38,32 @@ function M.declare()
     src = "https://github.com/folke/snacks.nvim",
     lazy = false,
     config = function()
+      -- Snacks refuses a second setup(); a reload keeps the first one.
+      if Snacks and Snacks.did_setup then return end
       require("snacks").setup({
         bigfile = { enabled = true },
-        dashboard = { enabled = true },
+        dashboard = {
+          enabled = true,
+          -- Snacks' own "startup" section asks lazy.nvim for its numbers,
+          -- which this config doesn't have; this one asks config.lazy.
+          sections = {
+            { section = "header" },
+            { section = "keys", gap = 1, padding = 1 },
+            function()
+              local n, count = lazy.stats()
+              local ms = (vim.uv.hrtime() - (vim.g.config_start_ns or vim.uv.hrtime())) / 1e6
+              return {
+                align = "center",
+                text = {
+                  { "⚡ Neovim loaded ", hl = "footer" },
+                  { n .. "/" .. count, hl = "special" },
+                  { " plugins in ", hl = "footer" },
+                  { ("%.1fms"):format(ms), hl = "special" },
+                },
+              }
+            end,
+          },
+        },
         image = { enabled = true },
         indent = { enabled = true },
         input = { enabled = true },
@@ -80,6 +103,7 @@ end
 function M.setup()
   -- which-key is only useful once you're typing; load it right after the UI.
   vim.api.nvim_create_autocmd("UIEnter", {
+    group = vim.api.nvim_create_augroup("config-ui", { clear = true }),
     once = true,
     callback = function() vim.schedule(function() lazy.load("which-key.nvim") end) end,
   })

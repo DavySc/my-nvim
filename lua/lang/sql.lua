@@ -50,7 +50,10 @@ M.plugins = {
       require("dbbliss").setup(require("config.machine").dbbliss)
       local completion = require("config.core.completion")
       completion.load()
-      require("cmp").register_source("dbbliss", require("dbbliss.completion.cmp").new())
+      -- A config reload runs this again: one dbbliss source, not two.
+      local cmp = require("cmp")
+      if vim.g.config_dbbliss_cmp then cmp.unregister_source(vim.g.config_dbbliss_cmp) end
+      vim.g.config_dbbliss_cmp = cmp.register_source("dbbliss", require("dbbliss.completion.cmp").new())
       completion.source("sql", { { name = "dbbliss" }, { name = "nvim_lsp" }, { name = "luasnip" } })
     end,
   },
