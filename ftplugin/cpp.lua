@@ -1,12 +1,14 @@
 -- C / C++ (ftplugin/c.lua sources this file).
 --
--- Two build paths, deliberately kept apart:
---   :make      -- compile just this buffer, for scratch files and single-file
---                exercises. See lua/config/cmake.lua for the project path.
---   :CMake ... -- configure/build/run/debug the surrounding CMake project.
--- <leader>mm picks whichever applies to the current buffer.
+-- Three build paths, picked by what is above the buffer:
+--   CMakeLists.txt -- :CMake configure/build/run/debug (lua/config/cmake.lua)
+--   Makefile       -- make in that directory (lua/config/make.lua); :make too
+--   neither        -- :make compiles just this buffer, for scratch files and
+--                     single-file exercises
+-- <leader>mm/mr/md build, run and debug whichever applies.
 
 local cmake = require("config.cmake")
+local make = require("config.make")
 
 vim.bo.commentstring = "// %s"
 vim.bo.comments = "sO:* -,mO:*  ,exO:*/,s1:/*,mb:*,ex:*/,://"
@@ -66,9 +68,12 @@ local function compile_cmd(file)
   return vim.list_extend(cmd, { file, "-o", out })
 end
 
--- `:make` builds the current file alone, so <leader>md has something to
--- attach to even without a CMake project.
-if vim.api.nvim_buf_get_name(0) ~= "" then
+-- `:make` runs the project's make, or else builds the current file alone, so
+-- <leader>md has something to attach to even without a project.
+local make_project = not cmake.project() and make.project() or nil
+if make_project and make.exe() then
+  vim.bo.makeprg = make.exe() .. " -C " .. vim.fn.fnameescape(make_project.root)
+elseif vim.api.nvim_buf_get_name(0) ~= "" then
   vim.bo.makeprg = table.concat(vim.tbl_map(vim.fn.fnameescape, compile_cmd(vim.api.nvim_buf_get_name(0))), " ")
 end
 
@@ -111,6 +116,8 @@ end
 local function build()
   if cmake.project() then
     vim.cmd("CMake build")
+  elseif make.project() then
+    make.build(make.project())
   else
     vim.cmd.make()
   end
@@ -119,6 +126,8 @@ end
 local function run()
   if cmake.project() then
     vim.cmd("CMake run")
+  elseif make.project() then
+    make.run(make.project())
   else
     cpp_run({})
   end
@@ -128,6 +137,9 @@ local function debug()
   local p = cmake.project()
   if p then
     return cmake.debug(p, {})
+  end
+  if make.project() then
+    return make.debug(make.project())
   end
   local file = vim.api.nvim_buf_get_name(0)
   if file == "" then
@@ -144,15 +156,18 @@ local function debug()
   })
 end
 
-map("<leader>mm", build, "C++: build")
-map("<leader>mr", run, "C++: run")
-map("<leader>md", debug, "C++: debug")
-map("<leader>mg", "<cmd>CMake configure<cr>", "C++: configure")
-map("<leader>mt", "<cmd>CMake target<cr>", "C++: select target")
-map("<leader>mb", "<cmd>CMake type<cr>", "C++: select build type")
+map("<leader>mm", build, "C/C++: build")
+map("<leader>mr", run, "C/C++: run")
+map("<leader>md", debug, "C/C++: debug")
+map("<leader>mg", "<cmd>CMake configure<cr>", "C/C++: configure")
+map("<leader>mt", function()
+  if not cmake.project() and make.project() then return make.select_program(make.project()) end
+  vim.cmd("CMake target")
+end, "C/C++: select target / program")
+map("<leader>mb", "<cmd>CMake type<cr>", "C/C++: select build type")
 -- Both commands are created by nvim-lspconfig's clangd config on attach.
-map("<leader>ma", "<cmd>LspClangdSwitchSourceHeader<cr>", "C++: alternate source/header")
-map("<leader>ms", "<cmd>LspClangdShowSymbolInfo<cr>", "C++: symbol info")
+map("<leader>ma", "<cmd>LspClangdSwitchSourceHeader<cr>", "C/C++: alternate source/header")
+map("<leader>ms", "<cmd>LspClangdShowSymbolInfo<cr>", "C/C++: symbol info")
 
 vim.b.undo_ftplugin = table.concat({
   "setlocal commentstring< comments< include< path< makeprg<",

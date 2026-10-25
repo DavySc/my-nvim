@@ -24,6 +24,7 @@ nvim --headless -c "luafile $repo/tests/smoke.lua"
 (cd "$repo" && nvim --headless --clean --cmd 'set rtp^=.' -l tests/org_babel_test.lua)
 nvim --headless -c "luafile $repo/tests/multicursor_test.lua"
 nvim --headless -c "luafile $repo/tests/reload_test.lua"
+nvim --headless -c "luafile $repo/tests/c_test.lua"
 
 budget=${BUDGET_MS:-60}
 times=""

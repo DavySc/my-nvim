@@ -13,6 +13,7 @@ lua/config/lazy.lua      the loader: event / filetype / command / first require(
 lua/config/machine.lua   defaults, merged with lua/local.lua
 lua/config/core/*.lua    completion, lsp, treesitter, format, dap, ui, git, ai, reload
 lua/config/cmake.lua     CMake driver (C/C++)
+lua/config/make.lua      Makefile projects (C/C++)
 lua/config/org_babel.lua run org source blocks, write #+RESULTS:
 lua/config/drracket/     DrRacket's Run, Interactions, stepper, arrows (back end: racket/)
 lua/lang/<name>.lua      one per language, set up on its first buffer
@@ -48,6 +49,15 @@ won't be set up twice). A new plugin is installed and loaded on the spot.
 | Racket | racket-langserver (`raco pkg install racket-langserver fmt`) | raco fmt | |
 | Haskell / Clash | HLS (through `nix develop` in flakes) | fourmolu | |
 | Nix, Lua, Souffle | nil, lua_ls, (none) | nixfmt, stylua | |
+
+C and C++: `<leader>mm` builds, `<leader>mr` runs and `<leader>md` debugs
+whatever the buffer is in: a CMake project (`:CMake`, which also links
+`compile_commands.json` for clangd), a plain Makefile project (`make` there;
+with [bear](https://github.com/rizsotto/Bear) on PATH it also writes
+`compile_commands.json`; `<leader>mt` picks the program to run), or just the
+file. Errors land in the quickfix list. A `.h` opens as C when it sits with C
+sources (Neovim's default is C++), and clangd is allowed to ask the gcc/MinGW
+compilers on PATH for their system headers.
 
 SQL dialect, first match wins: the engine of the dbbliss connection the
 buffer runs on, the extension (`.pgsql`/`.psql`, `.tsql`), `b:sql_dialect`,
