@@ -40,6 +40,9 @@ end
 check("dashboard opens", pcall(function() Snacks.dashboard.open() end))
 vim.cmd("enew")
 
+check("<C-n> multicursor key only on 0.13+",
+  (vim.fn.maparg("<C-n>", "n") ~= "") == (vim.fn.has("nvim-0.13") == 1))
+
 -- Startup leaves the heavy plugins alone.
 for _, name in ipairs({ "nvim-cmp", "neogit", "nvim-dap", "claudecode.nvim", "conform.nvim", "trouble.nvim" }) do
   check("not loaded at startup: " .. name, not lazy.is_loaded(name))

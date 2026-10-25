@@ -52,6 +52,14 @@ sh, bash, python, lua, racket, pwsh, c and rust, with `:var`, `:dir` and
 `:results silent`. SQL blocks run through `:Dbbliss exec` and show in its
 results window.
 
+## Multiple cursors (Neovim 0.13+)
+
+Built in (`:help multicursor`): `Q` toggles a cursor, `zq{motion}` places one
+at every match (`zq*`, `zqgn`), `q=` toggles follow mode, `CTRL-L` clears,
+`gQ` restores, `]C`/`[C` jump between them. On top of that, `<C-n>` adds a
+cursor on the word and jumps to its next match (VS Code's Ctrl-D), and
+`<leader>M` puts one on every match of the word. Nothing changes on 0.12.
+
 ## Tests
 
 ```sh

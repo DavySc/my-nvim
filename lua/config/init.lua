@@ -18,6 +18,7 @@ local core = {
   require("config.core.dap"),
   require("config.core.git"),
   require("config.core.ai"),
+  require("config.core.multicursor"),
 }
 
 ---@class Lang
