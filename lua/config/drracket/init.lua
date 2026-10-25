@@ -213,6 +213,8 @@ end
 ---@param lines string[]
 local function show_steps(lines)
   if not (step_buf and vim.api.nvim_buf_is_valid(step_buf)) then
+    local old = vim.fn.bufnr("^Racket Macro Stepper$") -- left by a config reload
+    if old ~= -1 then vim.api.nvim_buf_delete(old, { force = true }) end
     step_buf = vim.api.nvim_create_buf(false, true)
     vim.api.nvim_buf_set_name(step_buf, "Racket Macro Stepper")
     vim.bo[step_buf].bufhidden = "hide"

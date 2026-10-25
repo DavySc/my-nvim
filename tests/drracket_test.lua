@@ -231,5 +231,23 @@ ok("use count note", vim.iter(notes):any(function(n) return n:find("→ 2 uses",
 syncheck.toggle(arrows, false)
 eq("arrows off clears", #vim.api.nvim_buf_get_extmarks(arrows, sns, 0, -1, {}), 0)
 
+-- :ConfigReload loads these modules again: the old process is ended and the
+-- buffers' names don't collide.
+r = await("before reload", function(done) drracket.run(pics, done) end)
+local old_backend = require("config.drracket.backend")
+for name in pairs(package.loaded) do
+  if name:find("^config%.drracket") then package.loaded[name] = nil end
+end
+drracket = require("config.drracket")
+repl = require("config.drracket.repl")
+drracket.setup()
+ok("reload: a fresh backend module", require("config.drracket.backend") ~= old_backend)
+eq("reload: old process ended", vim.wait(5000, function() return not old_backend.running() end, 20), true)
+r = await("run after reload", function(done) drracket.run(pics, done) end)
+eq("run after reload: no error", r[1], nil)
+ok("run after reload: output", interactions():find("hello", 1, true), interactions())
+r = await("expand after reload", function(done) drracket.expand({ buf = use }, done) end)
+eq("expand after reload: no error", r[1], nil)
+
 require("config.drracket.backend").stop()
 finish()

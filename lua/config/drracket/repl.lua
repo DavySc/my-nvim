@@ -42,6 +42,10 @@ end
 
 function M.buf()
   if valid() then return buf end
+  -- After a config reload the buffer outlives this module: wipe it, it held
+  -- the old program's session.
+  local old = vim.fn.bufnr("^" .. NAME .. "$")
+  if old ~= -1 then vim.api.nvim_buf_delete(old, { force = true }) end
   buf = vim.api.nvim_create_buf(false, true)
   vim.api.nvim_buf_set_name(buf, NAME)
   vim.bo[buf].buftype = "prompt"

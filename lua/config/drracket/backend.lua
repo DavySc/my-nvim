@@ -17,6 +17,16 @@ local M = {}
 ---@field pos? integer 1-based character offset in the file
 ---@field span integer characters
 
+-- :ConfigReload loads this file again; the old copy's Racket process can't
+-- be adopted (its callbacks belong to the old copy), so it's ended and the
+-- next command starts a new one, as after :Racket restart.
+local survivor = package.loaded["drracket.process"] or {}
+package.loaded["drracket.process"] = survivor
+if survivor.job then
+  pcall(survivor.job.kill, survivor.job, "sigterm")
+  survivor.job = nil
+end
+
 local job ---@type vim.SystemObj?
 local next_id = 0
 ---@type table<integer, fun(err: DrRacketError?, result: any)>
@@ -94,6 +104,7 @@ function M.start()
       if data and handlers.stderr then vim.schedule(function() handlers.stderr({ text = data }) end) end
     end,
   }, on_exit)
+  survivor.job = job
   return true
 end
 
