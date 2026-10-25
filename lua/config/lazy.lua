@@ -22,6 +22,7 @@ local M = {}
 ---@field ft? string|string[]
 ---@field cmd? string|string[]
 ---@field config? fun() runs once, right after the plugin is loaded
+---@field build? fun() runs after an install or update (the plugin is loaded first)
 
 ---@type table<string, LazySpec>
 local specs = {}
@@ -161,6 +162,18 @@ end
 --- Install everything declared so far and put the eager plugins on
 --- 'runtimepath'. Lazy plugins are installed but left out until triggered.
 function M.install()
+  -- Must exist before vim.pack.add, which fires it while installing.
+  vim.api.nvim_create_autocmd("PackChanged", {
+    group = group,
+    callback = function(ev)
+      local d = ev.data
+      local spec = specs[d.spec.name]
+      if spec and spec.build and (d.kind == "install" or d.kind == "update") then
+        if not d.active then vim.cmd.packadd(d.spec.name) end
+        spec.build()
+      end
+    end,
+  })
   local list_ = {}
   for _, name in ipairs(order) do
     local s = specs[name]

@@ -59,6 +59,10 @@ local cases = {
   haskell = { "a.hs", "haskell", { "hls" } },
   nix = { "a.nix", "nix", { "nil_ls" } },
   souffle = { "a.dl", "souffle", {} },
+  sql = { "a.sql", "sql", { "postgres_lsp" } },
+  csharp = { "a.cs", "cs", { "roslyn" } },
+  verilog = { "a.sv", "systemverilog", { "verible" } },
+  racket = { "a.rkt", "racket", { "racket_langserver" } },
 }
 for name, case in pairs(cases) do
   if machine.langs[name] then lang(unpack(case)) end
@@ -67,6 +71,27 @@ end
 if machine.langs.c then
   check("clangd_extensions loaded with C", lazy.is_loaded("clangd_extensions.nvim"))
   check(":CMake defined with C", vim.fn.exists(":CMake") == 2)
+end
+if machine.langs.sql then
+  check("dbbliss loaded with SQL", lazy.is_loaded("dbbliss.nvim"))
+  check(":Dbbliss defined", vim.fn.exists(":Dbbliss") == 2)
+  local sql = require("lang.sql")
+  open("b.tsql")
+  check(".tsql is sql", vim.bo.filetype == "sql", vim.bo.filetype)
+  check(".tsql dialect", sql.dialect(0) == "tsql")
+  open("c.pgsql")
+  check(".pgsql dialect", sql.dialect(0) == "postgres")
+  open("d.sql")
+  vim.b.sql_dialect = "tsql"
+  check("b:sql_dialect wins over the default", sql.dialect(0) == "tsql")
+end
+if machine.langs.verilog then
+  open("b.v")
+  check(".v is verilog", vim.bo.filetype == "verilog", vim.bo.filetype)
+  check("verilog uses the systemverilog grammar", vim.treesitter.language.get_lang("verilog") == "systemverilog")
+end
+if machine.langs.csharp then
+  check("roslyn.nvim loaded with C#", lazy.is_loaded("roslyn.nvim"))
 end
 check("completion loaded with the first server", lazy.is_loaded("nvim-cmp"))
 check("cmp sources registered", pcall(function()

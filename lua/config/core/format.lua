@@ -19,6 +19,18 @@ function M.add(fts)
   end
 end
 
+---@type table<string, table>
+local formatters = {}
+
+--- Override or extend a conform formatter's definition (conform's
+--- `formatters` option).
+---@param name string
+---@param def table
+function M.formatter(name, def)
+  formatters[name] = def
+  if lazy.is_loaded("conform.nvim") then require("conform").formatters[name] = def end
+end
+
 --- Skip format-on-save for `ft` unless `pred(bufnr)` is true.
 ---@param fts string[]
 ---@param pred fun(bufnr: integer): boolean
@@ -30,7 +42,7 @@ function M.declare()
   lazy.add({
     src = "https://github.com/stevearc/conform.nvim",
     cmd = { "ConformInfo" },
-    config = function() require("conform").setup({ formatters_by_ft = by_ft }) end,
+    config = function() require("conform").setup({ formatters_by_ft = by_ft, formatters = formatters }) end,
   })
 end
 

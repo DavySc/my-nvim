@@ -78,6 +78,9 @@ for name, lang in pairs(langs) do
       -- `once` is per pattern, and a language usually has several.
       if lang._done then return end
       lang._done = true
+      -- Completion first: servers started from here on get its capabilities,
+      -- including ones a plugin enables as it loads (roslyn.nvim does).
+      require("config.core.completion").load()
       for _, plugin in ipairs(lang._plugins or {}) do lazy.load(plugin) end
       if lang.setup then
         local ok, err = pcall(lang.setup, machine)
