@@ -13,7 +13,7 @@
 vim.opt_local.path:append({ "src", "app", "lib", "test" })
 
 -- Indent folds, everything open. Not treesitter: tree-sitter-haskell corrupts
--- the heap and crashes nvim (see the FileType autocmd in lua/config/plugins.lua).
+-- the heap and crashes nvim (see lua/lang/haskell.lua).
 vim.opt_local.foldmethod = "indent"
 vim.opt_local.foldlevel = 99
 
