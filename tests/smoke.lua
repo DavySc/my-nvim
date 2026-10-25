@@ -35,6 +35,11 @@ local function open(file)
   return vim.api.nvim_get_current_buf()
 end
 
+-- The dashboard renders (it opens on UIEnter, which headless never fires).
+-- Its default "startup" section needs lazy.nvim, which isn't here (PR-1).
+check("dashboard opens", pcall(function() Snacks.dashboard.open() end))
+vim.cmd("enew")
+
 -- Startup leaves the heavy plugins alone.
 for _, name in ipairs({ "nvim-cmp", "neogit", "nvim-dap", "claudecode.nvim", "conform.nvim", "trouble.nvim" }) do
   check("not loaded at startup: " .. name, not lazy.is_loaded(name))

@@ -90,6 +90,12 @@ function M.load(name)
   end
 end
 
+--- Plugins loaded so far, and declared in all.
+---@return integer loaded, integer count
+function M.stats()
+  return vim.tbl_count(loaded), #order
+end
+
 --- Whether `name` has been loaded.
 function M.is_loaded(name)
   return loaded[name] == true

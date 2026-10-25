@@ -1,3 +1,6 @@
+-- For the dashboard's "loaded in" line (config/core/ui.lua).
+vim.g.config_start_ns = vim.uv.hrtime()
+
 -- Byte-compile cache for Lua modules: a free few milliseconds per start.
 vim.loader.enable()
 
