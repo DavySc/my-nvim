@@ -63,6 +63,7 @@ local cases = {
   csharp = { "a.cs", "cs", { "roslyn" } },
   verilog = { "a.sv", "systemverilog", { "verible" } },
   racket = { "a.rkt", "racket", { "racket_langserver" } },
+  org = { "a.org", "org", {} },
 }
 for name, case in pairs(cases) do
   if machine.langs[name] then lang(unpack(case)) end
@@ -89,6 +90,11 @@ if machine.langs.verilog then
   open("b.v")
   check(".v is verilog", vim.bo.filetype == "verilog", vim.bo.filetype)
   check("verilog uses the systemverilog grammar", vim.treesitter.language.get_lang("verilog") == "systemverilog")
+end
+if machine.langs.org then
+  open("b.org")
+  check("orgmode loaded with org", lazy.is_loaded("orgmode"))
+  check("<leader>oe runs blocks in org buffers", vim.fn.maparg("<leader>oe", "n", false, true).buffer == 1)
 end
 if machine.langs.csharp then
   check("roslyn.nvim loaded with C#", lazy.is_loaded("roslyn.nvim"))

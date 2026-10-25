@@ -27,6 +27,7 @@ local defaults = {
     csharp = true,
     verilog = true,
     racket = true,
+    org = true,
   },
   tools = { install = true },
   sql = { dialect = "postgres" },
