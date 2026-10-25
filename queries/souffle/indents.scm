@@ -1,5 +1,5 @@
 ; Soufflé Datalog — indentation
-; Required: config/plugins.lua points 'indentexpr' at nvim-treesitter for every
+; Required: lua/config/core/treesitter.lua points 'indentexpr' at nvim-treesitter for every
 ; buffer with a parser, and nvim-treesitter indents everything to column 0 when
 ; this query is missing.
 

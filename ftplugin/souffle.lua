@@ -1,5 +1,5 @@
 -- Soufflé Datalog (*.dl)
--- Filetype is registered in lua/config/plugins.lua; syntax/indent come from the
+-- Filetype is registered in lua/lang/souffle.lua; syntax/indent come from the
 -- treesitter parser + queries/souffle/.
 
 vim.bo.commentstring = "// %s"

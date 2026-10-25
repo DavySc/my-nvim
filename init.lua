@@ -1,3 +1,6 @@
+-- Byte-compile cache for Lua modules: a free few milliseconds per start.
+vim.loader.enable()
+
 print("G'day sir!")
 
 -- Leader must be set before plugins and keymaps
@@ -29,4 +32,4 @@ vim.api.nvim_create_autocmd("TextYankPost", {
   callback = function() vim.highlight.on_yank() end,
 })
 
-require("config.plugins")
+require("config")
