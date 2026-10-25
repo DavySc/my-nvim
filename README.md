@@ -46,8 +46,8 @@ then `sql.dialect` from the machine file.
 ## Org
 
 nvim-orgmode for todos, agenda (`<leader>oa`), capture (`<leader>oc`) and
-tangling; otter.nvim for LSP inside source blocks. `<leader>oe` runs the
-block under the cursor and writes `#+RESULTS:` (`<leader>oE`: every block):
+tangling; otter.nvim for LSP inside source blocks. `<leader>obe` runs the
+block under the cursor and writes `#+RESULTS:` (`<leader>obb`: every block):
 sh, bash, python, lua, racket, pwsh, c and rust, with `:var`, `:dir` and
 `:results silent`. SQL blocks run through `:Dbbliss exec` and show in its
 results window.

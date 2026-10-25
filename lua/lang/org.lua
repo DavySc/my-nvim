@@ -3,7 +3,8 @@
 -- lua/config/org_babel.lua. Agenda files are per machine (lua/local.lua).
 --
 --   <leader>oa agenda   <leader>oc capture   (anywhere; orgmode's own keys)
---   <leader>oe run the block under the cursor, <leader>oE every block
+--   <leader>obe run the block under the cursor, <leader>obb every block
+--   (org-babel's C-c C-v e / b; <leader>oe stays orgmode's export)
 --   <leader>obt tangle the file (orgmode)
 
 local lazy = require("config.lazy")
@@ -45,8 +46,8 @@ return {
       pattern = "org",
       callback = function(ev)
         local babel = require("config.org_babel")
-        vim.keymap.set("n", "<leader>oe", babel.execute, { buffer = ev.buf, desc = "org: run block" })
-        vim.keymap.set("n", "<leader>oE", babel.execute_all, { buffer = ev.buf, desc = "org: run all blocks" })
+        vim.keymap.set("n", "<leader>obe", babel.execute, { buffer = ev.buf, desc = "org: run block" })
+        vim.keymap.set("n", "<leader>obb", babel.execute_all, { buffer = ev.buf, desc = "org: run all blocks" })
         pcall(function() require("otter").activate(OTTER_LANGS, true, true) end)
       end,
     })

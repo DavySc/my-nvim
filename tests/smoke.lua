@@ -102,7 +102,10 @@ end
 if machine.langs.org then
   open("b.org")
   check("orgmode loaded with org", lazy.is_loaded("orgmode"))
-  check("<leader>oe runs blocks in org buffers", vim.fn.maparg("<leader>oe", "n", false, true).buffer == 1)
+  check("<leader>obe runs blocks in org buffers", vim.fn.maparg("<leader>obe", "n", false, true).buffer == 1)
+  -- orgmode's own <leader>oe (export) must not be shadowed.
+  check("<leader>oe is still orgmode's export", (vim.fn.maparg("<leader>oe", "n", false, true).desc or ""):find("export") ~= nil,
+    vim.fn.maparg("<leader>oe", "n", false, true).desc)
 end
 if machine.langs.csharp then
   check("roslyn.nvim loaded with C#", lazy.is_loaded("roslyn.nvim"))
