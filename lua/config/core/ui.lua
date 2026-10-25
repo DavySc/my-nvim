@@ -38,6 +38,8 @@ function M.declare()
     src = "https://github.com/folke/snacks.nvim",
     lazy = false,
     config = function()
+      -- Snacks refuses a second setup(); a reload keeps the first one.
+      if Snacks and Snacks.did_setup then return end
       require("snacks").setup({
         bigfile = { enabled = true },
         dashboard = {
@@ -101,6 +103,7 @@ end
 function M.setup()
   -- which-key is only useful once you're typing; load it right after the UI.
   vim.api.nvim_create_autocmd("UIEnter", {
+    group = vim.api.nvim_create_augroup("config-ui", { clear = true }),
     once = true,
     callback = function() vim.schedule(function() lazy.load("which-key.nvim") end) end,
   })

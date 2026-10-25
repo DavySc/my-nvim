@@ -19,6 +19,7 @@ local core = {
   require("config.core.git"),
   require("config.core.ai"),
   require("config.core.multicursor"),
+  require("config.core.reload"),
 }
 
 ---@class Lang

@@ -43,6 +43,7 @@ return {
   end,
   setup = function()
     vim.api.nvim_create_autocmd("FileType", {
+      group = vim.api.nvim_create_augroup("config-org", { clear = true }),
       pattern = "org",
       callback = function(ev)
         local babel = require("config.org_babel")

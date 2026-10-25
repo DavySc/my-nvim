@@ -1,10 +1,11 @@
 -- For the dashboard's "loaded in" line (config/core/ui.lua).
-vim.g.config_start_ns = vim.uv.hrtime()
+local reloading = vim.g.config_start_ns ~= nil -- lua/config/core/reload.lua
+vim.g.config_start_ns = vim.g.config_start_ns or vim.uv.hrtime()
 
 -- Byte-compile cache for Lua modules: a free few milliseconds per start.
 vim.loader.enable()
 
-print("G'day sir!")
+if not reloading then print("G'day sir!") end
 
 -- Leader must be set before plugins and keymaps
 vim.g.mapleader = " "

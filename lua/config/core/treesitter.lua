@@ -28,9 +28,11 @@ function M.declare()
 end
 
 function M.setup()
+  local group = vim.api.nvim_create_augroup("config-treesitter", { clear = true })
   -- nvim-treesitter reloads its parser table on every install/update and fires
   -- `User TSUpdate` so out-of-tree grammars can re-register.
   vim.api.nvim_create_autocmd("User", {
+    group = group,
     pattern = "TSUpdate",
     desc = "Register grammars that aren't in nvim-treesitter's registry",
     callback = function()
@@ -40,6 +42,7 @@ function M.setup()
   })
 
   vim.api.nvim_create_autocmd("FileType", {
+    group = group,
     desc = "Start treesitter highlighting + indentation when a parser exists",
     callback = function(ev)
       if skip[ev.match] then return end

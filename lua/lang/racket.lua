@@ -19,6 +19,7 @@ return {
       })
     end
     vim.api.nvim_create_autocmd("FileType", {
+      group = vim.api.nvim_create_augroup("config-racket", { clear = true }),
       pattern = "racket",
       callback = function(ev)
         vim.keymap.set("n", "<leader>mr", function() term({ "racket" }) end, { buffer = ev.buf, desc = "Racket: run" })
