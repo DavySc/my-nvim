@@ -81,6 +81,11 @@ if machine.langs.c then
   check("clangd_extensions loaded with C", lazy.is_loaded("clangd_extensions.nvim"))
   check(":CMake defined with C", vim.fn.exists(":CMake") == 2)
 end
+if machine.langs.racket then
+  open("b.rkt")
+  check(":Racket defined with Racket", vim.fn.exists(":Racket") == 2)
+  check("<leader>mr runs Racket files", vim.fn.maparg("<leader>mr", "n", false, true).buffer == 1)
+end
 if machine.langs.sql then
   check("dbbliss loaded with SQL", lazy.is_loaded("dbbliss.nvim"))
   check(":Dbbliss defined", vim.fn.exists(":Dbbliss") == 2)

@@ -14,9 +14,10 @@ lua/config/machine.lua   defaults, merged with lua/local.lua
 lua/config/core/*.lua    completion, lsp, treesitter, format, dap, ui, git, ai, reload
 lua/config/cmake.lua     CMake driver (C/C++)
 lua/config/org_babel.lua run org source blocks, write #+RESULTS:
+lua/config/drracket/     DrRacket's Run, Interactions, stepper, arrows (back end: racket/)
 lua/lang/<name>.lua      one per language, set up on its first buffer
 ftplugin/, queries/      buffer-local settings, Souffle queries
-tests/                   tests/run.sh: smoke, org-babel, multicursor, reload, startup budget
+tests/                   tests/run.sh: smoke, org-babel, DrRacket, multicursor, reload, startup budget
 ```
 
 ## Per-machine settings
@@ -51,6 +52,33 @@ won't be set up twice). A new plugin is installed and loaded on the spot.
 SQL dialect, first match wins: the engine of the dbbliss connection the
 buffer runs on, the extension (`.pgsql`/`.psql`, `.tsql`), `b:sql_dialect`,
 then `sql.dialect` from the machine file.
+
+## Racket (DrRacket in Neovim)
+
+racket-langserver does Check Syntax's jump, rename and hover. The rest of
+DrRacket comes from `lua/config/drracket`, which talks to one Racket process
+(`racket/drracket.rkt`, needs only a standard Racket install):
+
+| Key | What |
+| --- | --- |
+| `<leader>mr` | Run: save, start over in a fresh namespace, run `main` and `test` submodules, then a REPL inside the module |
+| `<leader>mi` | Interactions window (a prompt; `<Up>`/`<Down>` history) |
+| `<leader>me` | send the form under the cursor, or the selection, to Interactions |
+| `<leader>ms` | stop (break) the running program |
+| `<leader>mx` / `<leader>mX` | macro stepper on the file or selection; `X` shows Racket's own macros too (`]s`/`[s` step) |
+| `<leader>ma` | binding arrows for the name under the cursor, tail calls, unused requires |
+| `<leader>md` | `raco docs` for the word under the cursor |
+| `<leader>mc` | plain `racket -i` in a terminal |
+| `<C-\>` | types λ (insert mode) |
+
+The REPL uses the file's own `#lang` (its `configure-runtime`, reader and
+`#%top-interaction`), so BSL rejects definitions at the prompt and your own
+languages behave as they would in DrRacket. Runs have errortrace on and a
+1 GB memory limit (`require("config.drracket").setup({ errortrace = false,
+memory_mb = 512 })` in `extra` changes them). A runtime error puts DrRacket's
+pink box and a diagnostic on the innermost expression; the stack goes to the
+quickfix list. Picts and 2htdp images show inline in Ghostty and kitty
+(Snacks image); elsewhere the line says `[image]` and `<CR>` opens it.
 
 ## Org
 
