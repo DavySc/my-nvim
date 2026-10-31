@@ -27,7 +27,7 @@ local core = {
 ---@field plugins? (LazySpec|string)[] loaded with the language
 ---@field parsers? string[] treesitter parsers to install
 ---@field tools? table<string, string> mason package -> executable
----@field declare? fun(machine: Machine) at startup; keep it cheap (filetype.add, parser registration)
+---@field declare? fun(machine: Machine) at startup; keep it cheap (filetype.add, a stand-in keymap)
 ---@field setup? fun(machine: Machine) once, on the first buffer of one of `ft`
 
 local names = vim.tbl_keys(machine.langs)
