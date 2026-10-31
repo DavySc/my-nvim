@@ -18,10 +18,7 @@ export XDG_DATA_HOME="${NVIM_TEST_DATA:-$tmp/data}"
 # First start installs the plugins (vim.pack asks nothing in headless mode).
 nvim --headless +'qa!' >/dev/null 2>&1 || true
 
-# Needs racket on PATH for most of it; says so and skips otherwise.
-(cd "$repo" && nvim --headless --clean --cmd 'set rtp^=.' -l tests/drracket_test.lua)
 nvim --headless -c "luafile $repo/tests/smoke.lua"
-(cd "$repo" && nvim --headless --clean --cmd 'set rtp^=.' -l tests/org_babel_test.lua)
 nvim --headless -c "luafile $repo/tests/multicursor_test.lua"
 nvim --headless -c "luafile $repo/tests/reload_test.lua"
 

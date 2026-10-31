@@ -9,7 +9,7 @@ local M = {}
 ---@type table[] which-key group specs added by other modules
 local groups = {
   { "<leader>g", group = "git" },
-  { "<leader>m", group = "make (C/C++, Haskell/Clash)" },
+  { "<leader>m", group = "make / run" },
   { "<leader>h", group = "hunks", mode = { "n", "v" } },
   { "<leader>d", group = "debug" },
   { "<leader>f", group = "find" },
@@ -64,13 +64,11 @@ function M.declare()
             end,
           },
         },
-        image = { enabled = true },
         indent = { enabled = true },
         input = { enabled = true },
         picker = { enabled = true },
         notifier = { enabled = true },
-        -- exclude haskell: its treesitter parser corrupts the heap (see lang/haskell.lua)
-        quickfile = { enabled = true, exclude = { "haskell" } },
+        quickfile = { enabled = true },
         scope = { enabled = true },
         scroll = { enabled = true },
         statuscolumn = { enabled = true },

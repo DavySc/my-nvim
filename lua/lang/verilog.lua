@@ -1,5 +1,6 @@
--- Verilog and SystemVerilog (and what Clash generates): verible for
--- diagnostics, formatting and navigation, one treesitter grammar for both.
+-- Verilog and SystemVerilog: verible for diagnostics, formatting and
+-- navigation, one treesitter grammar for both. Lint and simulate keys
+-- (verilator, iverilog) live in ftplugin/verilog.lua.
 
 ---@type Lang
 return {

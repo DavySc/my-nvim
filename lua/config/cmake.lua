@@ -1,4 +1,4 @@
--- Minimal CMake driver, in the spirit of ftplugin/souffle.lua: no plugin, just
+-- Minimal CMake driver: no plugin, just
 -- the commands an edit-build-run-debug loop actually needs.
 --
 -- Target discovery goes through the CMake File API (build/.cmake/api/v1)

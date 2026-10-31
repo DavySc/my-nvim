@@ -13,19 +13,17 @@ lua/config/lazy.lua      the loader: event / filetype / command / first require(
 lua/config/machine.lua   defaults, merged with lua/local.lua
 lua/config/core/*.lua    completion, lsp, treesitter, format, dap, ui, git, ai, reload
 lua/config/cmake.lua     CMake driver (C/C++)
-lua/config/org_babel.lua run org source blocks, write #+RESULTS:
-lua/config/drracket/     DrRacket's Run, Interactions, stepper, arrows (back end: racket/)
 lua/lang/<name>.lua      one per language, set up on its first buffer
-ftplugin/, queries/      buffer-local settings, Souffle queries
-tests/                   tests/run.sh: smoke, org-babel, DrRacket, multicursor, reload, startup budget
+ftplugin/                buffer-local settings and build/run keys
+tests/                   tests/run.sh: smoke, multicursor, reload, startup budget
 ```
 
 ## Per-machine settings
 
 `lua/local.lua` is git-ignored. Copy `lua/local.example.lua` and keep only
 what the machine changes: which languages exist (`langs`), whether mason may
-install tools, the default SQL dialect, dbbliss connections, org files, and
-an `extra` function for anything else. Without the file every language is on.
+install tools, and an `extra` function for anything else. Without the file
+every language is on.
 
 ## Reloading
 
@@ -38,56 +36,56 @@ won't be set up twice). A new plugin is installed and loaded on the spot.
 
 ## Languages
 
-| Language | Server | Format | Debug |
+| Language | Server | Format | Build / run / debug |
 | --- | --- | --- | --- |
-| SQL (T-SQL, PostgreSQL) | dbbliss.nvim (run, complete, plans); `postgres_lsp` where configured | sqlfluff, per-buffer dialect | |
-| C# | Roslyn (roslyn.nvim) | csharpier | netcoredbg |
+| C / C++ | clangd + clangd_extensions | clang-format (with a `.clang-format`) | `:make` single file or `:CMake`; codelldb, gdb |
+| Verilog / SystemVerilog | verible | verible | verilator lint, iverilog + vvp run |
+| GLSL | glsl_analyzer | clang-format (with a `.clang-format`) | |
 | Rust | rust-analyzer (through `nix develop` in flakes) | rustfmt | codelldb |
-| C / C++ | clangd + clangd_extensions | clang-format (with a `.clang-format`) | codelldb, gdb |
-| Verilog / SystemVerilog | verible | verible | |
-| Racket | racket-langserver (`raco pkg install racket-langserver fmt`) | raco fmt | |
-| Haskell / Clash | HLS (through `nix develop` in flakes) | fourmolu | |
-| Nix, Lua, Souffle | nil, lua_ls, (none) | nixfmt, stylua | |
+| Markdown | marksman | prettier (`:Format` only) | |
+| Nix, Lua | nil, lua_ls | nixfmt, stylua | |
 
-SQL dialect, first match wins: the engine of the dbbliss connection the
-buffer runs on, the extension (`.pgsql`/`.psql`, `.tsql`), `b:sql_dialect`,
-then `sql.dialect` from the machine file.
+Mason installs the servers and formatters it has. `verilator` and `iverilog`
+are not in mason: install them yourself (`apt install verilator iverilog`,
+`brew install verilator icarus-verilog`, or the nix equivalents).
 
-## Racket (DrRacket in Neovim)
+## Verilog (nand2tetris)
 
-racket-langserver does Check Syntax's jump, rename and hover. The rest of
-DrRacket comes from `lua/config/drracket`, which talks to one Racket process
-(`racket/drracket.rkt`, needs only a standard Racket install):
+`<leader>m` in a `.v` / `.sv` buffer:
 
 | Key | What |
 | --- | --- |
-| `<leader>mr` | Run: save, start over in a fresh namespace, run `main` and `test` submodules, then a REPL inside the module |
-| `<leader>mi` | Interactions window (a prompt; `<Up>`/`<Down>` history) |
-| `<leader>me` | send the form under the cursor, or the selection, to Interactions |
-| `<leader>ms` | stop (break) the running program |
-| `<leader>mx` / `<leader>mX` | macro stepper on the file or selection; `X` shows Racket's own macros too (`]s`/`[s` step) |
-| `<leader>ma` | binding arrows for the name under the cursor, tail calls, unused requires |
-| `<leader>md` | `raco docs` for the word under the cursor |
-| `<leader>mc` | plain `racket -i` in a terminal |
-| `<C-\>` | types λ (insert mode) |
+| `<leader>mm` | `:make`: `verilator --lint-only -Wall` on the file; findings go to the quickfix list |
+| `<leader>mr` | `:VerilogRun [plusargs]`: `iverilog -g2012` the file (modules it instantiates are found next to it), then `vvp` in a terminal |
 
-The REPL uses the file's own `#lang` (its `configure-runtime`, reader and
-`#%top-interaction`), so BSL rejects definitions at the prompt and your own
-languages behave as they would in DrRacket. Runs have errortrace on and a
-1 GB memory limit (`require("config.drracket").setup({ errortrace = false,
-memory_mb = 512 })` in `extra` changes them). A runtime error puts DrRacket's
-pink box and a diagnostic on the innermost expression; the stack goes to the
-quickfix list. Picts and 2htdp images show inline in Ghostty and kitty
-(Snacks image); elsewhere the line says `[image]` and `<CR>` opens it.
+Write a testbench per chip, open it, `<leader>mr`. Compile errors open the
+quickfix list instead of the terminal.
 
-## Org
+## C / C++
 
-nvim-orgmode for todos, agenda (`<leader>oa`), capture (`<leader>oc`) and
-tangling; otter.nvim for LSP inside source blocks. `<leader>obe` runs the
-block under the cursor and writes `#+RESULTS:` (`<leader>obb`: every block):
-sh, bash, python, lua, racket, pwsh, c and rust, with `:var`, `:dir` and
-`:results silent`. SQL blocks run through `:Dbbliss exec` and show in its
-results window.
+`<leader>mm` builds, `<leader>mr` runs and `<leader>md` debugs: the
+surrounding CMake project when there is one (`lua/config/cmake.lua`:
+`:CMake configure|build|run|debug|target|type`), the single file otherwise
+(`:make`, `:CppRun`). `<leader>ma` switches source/header.
+
+## Shaders and markdown
+
+GLSL files (`.glsl`, `.vert`, `.frag`, `.geom`, `.comp`, ...) get
+glsl_analyzer for completion, go-to-definition and diagnostics, and
+clang-format when the project has a `.clang-format`.
+
+Markdown buffers soft-wrap, render headings, lists, tables and code blocks in
+place (render-markdown.nvim) and get link and heading completion from
+marksman. `:Format` runs prettier; saving never reformats.
+
+## Git and AI
+
+gitsigns in the gutter with hunk actions on `<leader>h`; `<leader>g` for
+status, log, diff, branches (snacks pickers), `<leader>gg` for neogit and
+`<leader>gG` for lazygit. `<leader>a` is Claude Code (claudecode.nvim):
+toggle, add the buffer, send a selection, accept or reject a diff, and
+`<leader>ae` / `<leader>ar` / `<leader>at` in visual mode to ask for an
+explanation, a refactor or learning tips.
 
 ## Multiple cursors (Neovim 0.13+)
 

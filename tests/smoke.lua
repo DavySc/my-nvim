@@ -64,14 +64,10 @@ local cases = {
   lua = { "a.lua", "lua", { "lua_ls" } },
   c = { "a.c", "c", { "clangd" } },
   rust = { "a.rs", "rust", { "rust_analyzer" } },
-  haskell = { "a.hs", "haskell", { "hls" } },
   nix = { "a.nix", "nix", { "nil_ls" } },
-  souffle = { "a.dl", "souffle", {} },
-  sql = { "a.sql", "sql", { "postgres_lsp" } },
-  csharp = { "a.cs", "cs", { "roslyn" } },
   verilog = { "a.sv", "systemverilog", { "verible" } },
-  racket = { "a.rkt", "racket", { "racket_langserver" } },
-  org = { "a.org", "org", {} },
+  glsl = { "a.glsl", "glsl", { "glsl_analyzer" } },
+  markdown = { "a.md", "markdown", { "marksman" } },
 }
 for name, case in pairs(cases) do
   if machine.langs[name] then lang(unpack(case)) end
@@ -81,39 +77,24 @@ if machine.langs.c then
   check("clangd_extensions loaded with C", lazy.is_loaded("clangd_extensions.nvim"))
   check(":CMake defined with C", vim.fn.exists(":CMake") == 2)
 end
-if machine.langs.racket then
-  open("b.rkt")
-  check(":Racket defined with Racket", vim.fn.exists(":Racket") == 2)
-  check("<leader>mr runs Racket files", vim.fn.maparg("<leader>mr", "n", false, true).buffer == 1)
-end
-if machine.langs.sql then
-  check("dbbliss loaded with SQL", lazy.is_loaded("dbbliss.nvim"))
-  check(":Dbbliss defined", vim.fn.exists(":Dbbliss") == 2)
-  local sql = require("lang.sql")
-  open("b.tsql")
-  check(".tsql is sql", vim.bo.filetype == "sql", vim.bo.filetype)
-  check(".tsql dialect", sql.dialect(0) == "tsql")
-  open("c.pgsql")
-  check(".pgsql dialect", sql.dialect(0) == "postgres")
-  open("d.sql")
-  vim.b.sql_dialect = "tsql"
-  check("b:sql_dialect wins over the default", sql.dialect(0) == "tsql")
-end
 if machine.langs.verilog then
+  open("b.sv")
+  check(":VerilogRun defined in SystemVerilog buffers", vim.fn.exists(":VerilogRun") == 2)
+  check("<leader>mr runs Verilog files", vim.fn.maparg("<leader>mr", "n", false, true).buffer == 1)
+  check("verilator is the SystemVerilog makeprg", vim.bo.makeprg:find("verilator .* %-sv ") ~= nil, vim.bo.makeprg)
   open("b.v")
   check(".v is verilog", vim.bo.filetype == "verilog", vim.bo.filetype)
   check("verilog uses the systemverilog grammar", vim.treesitter.language.get_lang("verilog") == "systemverilog")
+  check(":VerilogRun defined in Verilog buffers", vim.fn.exists(":VerilogRun") == 2)
 end
-if machine.langs.org then
-  open("b.org")
-  check("orgmode loaded with org", lazy.is_loaded("orgmode"))
-  check("<leader>obe runs blocks in org buffers", vim.fn.maparg("<leader>obe", "n", false, true).buffer == 1)
-  -- orgmode's own <leader>oe (export) must not be shadowed.
-  check("<leader>oe is still orgmode's export", (vim.fn.maparg("<leader>oe", "n", false, true).desc or ""):find("export") ~= nil,
-    vim.fn.maparg("<leader>oe", "n", false, true).desc)
+if machine.langs.glsl then
+  open("b.frag")
+  check(".frag is glsl", vim.bo.filetype == "glsl", vim.bo.filetype)
 end
-if machine.langs.csharp then
-  check("roslyn.nvim loaded with C#", lazy.is_loaded("roslyn.nvim"))
+if machine.langs.markdown then
+  open("b.md")
+  check("render-markdown loaded with markdown", lazy.is_loaded("render-markdown.nvim"))
+  check("markdown wraps", vim.wo.wrap and vim.wo.linebreak)
 end
 check("completion loaded with the first server", lazy.is_loaded("nvim-cmp"))
 check("cmp sources registered", pcall(function()

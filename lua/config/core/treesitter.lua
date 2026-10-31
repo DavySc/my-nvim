@@ -8,19 +8,9 @@ local lazy = require("config.lazy")
 local M = {}
 
 local parsers = { "lua", "luadoc", "markdown", "markdown_inline", "vimdoc", "query" }
----@type table<string, table> out-of-tree grammars: name -> nvim-treesitter parser entry
-local extra = {}
----@type table<string, boolean> filetypes that must not get treesitter
-local skip = {}
 
 ---@param list string[]
 function M.parsers(list) vim.list_extend(parsers, list) end
-
---- Register a grammar that isn't in nvim-treesitter's registry.
-function M.register(name, info) extra[name] = info end
-
---- Keep treesitter off for these filetypes (regex syntax instead).
-function M.skip(fts) for _, ft in ipairs(fts) do skip[ft] = true end end
 
 function M.declare()
   -- Eager: its queries/ must be on 'runtimepath' before the first buffer.
@@ -29,23 +19,10 @@ end
 
 function M.setup()
   local group = vim.api.nvim_create_augroup("config-treesitter", { clear = true })
-  -- nvim-treesitter reloads its parser table on every install/update and fires
-  -- `User TSUpdate` so out-of-tree grammars can re-register.
-  vim.api.nvim_create_autocmd("User", {
-    group = group,
-    pattern = "TSUpdate",
-    desc = "Register grammars that aren't in nvim-treesitter's registry",
-    callback = function()
-      local registry = require("nvim-treesitter.parsers")
-      for name, info in pairs(extra) do registry[name] = info end
-    end,
-  })
-
   vim.api.nvim_create_autocmd("FileType", {
     group = group,
     desc = "Start treesitter highlighting + indentation when a parser exists",
     callback = function(ev)
-      if skip[ev.match] then return end
       if pcall(vim.treesitter.start, ev.buf) then
         vim.bo[ev.buf].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
       end

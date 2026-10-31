@@ -1,6 +1,6 @@
 -- nvim-cmp + LuaSnip, loaded on the first InsertEnter or when the first
 -- language attaches an LSP (for the completion capabilities), whichever comes
--- first. Languages add sources with M.source() (dbbliss does, for SQL).
+-- first.
 
 local lazy = require("config.lazy")
 
@@ -15,9 +15,6 @@ local PLUGINS = {
   "https://github.com/saadparwaiz1/cmp_luasnip",
   "https://github.com/rafamadriz/friendly-snippets",
 }
-
----@type table<string, table[]> filetype -> extra cmp sources
-local ft_sources = {}
 
 local function setup()
   local cmp = require("cmp")
@@ -50,10 +47,6 @@ local function setup()
     ),
     completion = { completeopt = "menu,menuone,noinsert", keyword_length = 1 },
   })
-  for ft, sources in pairs(ft_sources) do
-    cmp.setup.filetype(ft, { sources = cmp.config.sources(sources, { { name = "buffer" } }) })
-  end
-
   vim.lsp.config("*", { capabilities = require("cmp_nvim_lsp").default_capabilities() })
 end
 
@@ -74,17 +67,6 @@ function M.load()
   done = true
   for _, src in ipairs(PLUGINS) do lazy.load(src:match("[^/]+$")) end
   setup()
-end
-
---- Use these sources (ahead of buffer words) in buffers of filetype `ft`.
----@param ft string
----@param sources table[] cmp source entries, e.g. { { name = "dbbliss" } }
-function M.source(ft, sources)
-  ft_sources[ft] = sources
-  if done then
-    local cmp = require("cmp")
-    cmp.setup.filetype(ft, { sources = cmp.config.sources(sources, { { name = "buffer" } }) })
-  end
 end
 
 return M

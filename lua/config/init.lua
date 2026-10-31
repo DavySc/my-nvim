@@ -27,7 +27,7 @@ local core = {
 ---@field plugins? (LazySpec|string)[] loaded with the language
 ---@field parsers? string[] treesitter parsers to install
 ---@field tools? table<string, string> mason package -> executable
----@field declare? fun(machine: Machine) at startup; keep it cheap (filetype.add, parser registration)
+---@field declare? fun(machine: Machine) at startup; keep it cheap (filetype.add, a stand-in keymap)
 ---@field setup? fun(machine: Machine) once, on the first buffer of one of `ft`
 
 local names = vim.tbl_keys(machine.langs)
@@ -81,7 +81,7 @@ for name, lang in pairs(langs) do
       if lang._done then return end
       lang._done = true
       -- Completion first: servers started from here on get its capabilities,
-      -- including ones a plugin enables as it loads (roslyn.nvim does).
+      -- including ones a plugin enables as it loads.
       require("config.core.completion").load()
       for _, plugin in ipairs(lang._plugins or {}) do lazy.load(plugin) end
       if lang.setup then
