@@ -14,9 +14,22 @@ local function debug_program()
   return vim.fn.input({ prompt = "Executable: ", default = dir .. "/", completion = "file" })
 end
 
+--- Whether a .clang-format governs `bufnr`. clang-format always has an
+--- opinion: with no config in the tree it silently rewrites the whole file to
+--- LLVM style, so C/C++ (and GLSL, lua/lang/glsl.lua) only format on save
+--- when the project actually pins a style.
+---@param bufnr integer
+---@return boolean
+local function has_clang_format(bufnr)
+  local name = vim.api.nvim_buf_get_name(bufnr)
+  local dir = name ~= "" and vim.fs.dirname(name) or vim.uv.cwd()
+  return vim.fs.find({ ".clang-format", "_clang-format" }, { path = dir, upward = true })[1] ~= nil
+end
+
 ---@type Lang
 return {
   ft = vim.list_extend({ "cmake" }, C_FAMILY),
+  has_clang_format = has_clang_format,
   -- doxygen is injected into /** */ comments, printf into format strings,
   -- cmake/make for the build files.
   parsers = { "c", "cpp", "doxygen", "printf", "cmake", "make" },
@@ -59,14 +72,7 @@ return {
     local fmt = {}
     for _, ft in ipairs(C_FAMILY) do fmt[ft] = { "clang-format" } end
     format.add(fmt)
-    -- clang-format always has an opinion: with no .clang-format in the tree it
-    -- silently rewrites the whole file to LLVM style. Only format C/C++ on save
-    -- when the project actually pins a style.
-    format.guard(C_FAMILY, function(bufnr)
-      local name = vim.api.nvim_buf_get_name(bufnr)
-      local dir = name ~= "" and vim.fs.dirname(name) or vim.uv.cwd()
-      return vim.fs.find({ ".clang-format", "_clang-format" }, { path = dir, upward = true })[1] ~= nil
-    end)
+    format.guard(C_FAMILY, has_clang_format)
 
     local configs = {
       {

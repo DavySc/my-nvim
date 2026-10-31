@@ -8,9 +8,6 @@
 ---@field name string shown nowhere important; handy in `extra` and :lua print()
 ---@field langs table<string, boolean> lua/lang/<name>.lua to use; a language that's off is never loaded or installed
 ---@field tools { install: boolean } let mason install missing tools for the enabled languages
----@field sql { dialect: "tsql"|"postgres" } default for .sql buffers that don't say otherwise
----@field dbbliss table passed to require("dbbliss").setup() (connections etc.)
----@field org { agenda_files: string|string[], default_notes_file: string }
 ---@field extra? fun() runs last, after everything else is set up
 
 ---@type Machine
@@ -20,22 +17,12 @@ local defaults = {
     lua = true,
     c = true,
     rust = true,
-    haskell = true,
     nix = true,
-    souffle = true,
-    sql = true,
-    csharp = true,
     verilog = true,
-    racket = true,
-    org = true,
+    glsl = true,
+    markdown = true,
   },
   tools = { install = true },
-  sql = { dialect = "postgres" },
-  dbbliss = { connections = {} },
-  org = {
-    agenda_files = "~/org/**/*",
-    default_notes_file = "~/org/inbox.org",
-  },
 }
 
 local ok, overrides = pcall(require, "local")
