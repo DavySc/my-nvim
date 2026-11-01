@@ -114,12 +114,11 @@ function M.setup()
   vim.keymap.set("n", "gD", function() Snacks.picker.lsp_declarations() end, { desc = "Goto Declaration" })
   vim.keymap.set("n", "gr", function() Snacks.picker.lsp_references() end, { nowait = true, desc = "References" })
   vim.keymap.set("n", "gI", function() Snacks.picker.lsp_implementations() end, { desc = "Goto Implementation" })
-  vim.keymap.set({ "n", "t" }, "<c-/>", function()
-    Snacks.terminal.toggle(nil, { win = { position = "float", border = "rounded" } })
-  end, { desc = "Floating terminal" })
-  vim.keymap.set("n", "<leader>ft", function()
-    Snacks.terminal.toggle(nil, { win = { position = "float", border = "rounded" } })
-  end, { desc = "Floating terminal" })
+  local function float_term() Snacks.terminal.toggle(nil, { win = { position = "float", border = "rounded" } }) end
+  -- Most terminals send Ctrl+/ as <C-_> (0x1F), so map both spellings.
+  vim.keymap.set({ "n", "t" }, "<c-/>", float_term, { desc = "Floating terminal" })
+  vim.keymap.set({ "n", "t" }, "<c-_>", float_term, { desc = "which_key_ignore" })
+  vim.keymap.set("n", "<leader>ft", float_term, { desc = "Floating terminal" })
 
   -- ── Motions: flash + spider ───────────────────────────────────────────
   vim.keymap.set({ "n", "x", "o" }, "s", function() require("flash").jump() end, { desc = "Flash" })
