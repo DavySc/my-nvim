@@ -25,6 +25,7 @@ local defaults = {
     markdown = true,
     org = true,
     sql = true,
+    souffle = true,
   },
   tools = { install = true },
   sql = { dialect = "postgres" },

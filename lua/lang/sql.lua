@@ -36,6 +36,12 @@ local function has_sqlfluff_config(bufnr)
   return vim.fs.find({ ".sqlfluff", "pyproject.toml", "setup.cfg", "tox.ini" }, { path = dir, upward = true })[1] ~= nil
 end
 
+local function has_sqldiff_config(bufnr)
+  local name = vim.api.nvim_buf_get_name(bufnr)
+  local dir = name ~= "" and vim.fs.dirname(name) or vim.uv.cwd()
+  return vim.fs.find({ "sqldiff.toml" }, { path = dir, upward = true })[1] ~= nil
+end
+
 M.ft = { "sql" }
 M.tools = { sqlfluff = "sqlfluff" }
 M.parsers = { "sql" }
@@ -67,7 +73,21 @@ function M.setup()
   -- project has a sqlfluff config (like clang-format: no silent rewrites of
   -- someone else's style); :Format always. An explicit buffer dialect wins
   -- over the project's; otherwise the project's config decides.
-  require("config.core.format").add({ sql = { "sqlfluff" } })
+  require("config.core.format").add({ sql = { "sqldiff" } })
+  -- sqldiff fmt (SQLDiff repo, `cargo install`): whitespace and keyword case
+  -- only, and every result is checked by the engine to mean the same thing.
+  -- Reads the buffer on stdin (--stdin-filepath names it for config lookup).
+  -- Layout comes from the project's sqldiff.toml; without one, keywords,
+  -- functions and types go lowercase. Use sqlfluff instead with
+  -- `:lua require("conform").format({formatters={"sqlfluff"}})`.
+  require("config.core.format").formatter("sqldiff", {
+    command = "sqldiff",
+    args = function(_, ctx)
+      local args = { "fmt", "-", "--stdin-filepath", ctx.filename, "--dialect", (M.dialect(ctx.buf)) }
+      if not has_sqldiff_config(ctx.buf) then vim.list_extend(args, { "--keyword-case", "lower" }) end
+      return args
+    end,
+  })
   require("config.core.format").formatter("sqlfluff", {
     require_cwd = false,
     -- 1 = fixed what it could, some lint left: still a formatted result.
@@ -75,10 +95,14 @@ function M.setup()
     args = function(_, ctx)
       local dialect, explicit = M.dialect(ctx.buf)
       if not explicit and has_sqlfluff_config(ctx.buf) then return { "fix", "-" } end
-      return { "fix", "--dialect", dialect, "-" }
+      -- No project config: keywords, functions, literals and types lowercase.
+      local lower = vim.fs.joinpath(vim.fn.stdpath("config"), "sqlfluff-lowercase.cfg")
+      return { "fix", "--config", lower, "--dialect", dialect, "-" }
     end,
   })
-  require("config.core.format").guard({ "sql" }, has_sqlfluff_config)
+  require("config.core.format").guard({ "sql" }, function(bufnr)
+    return has_sqldiff_config(bufnr) or has_sqlfluff_config(bufnr)
+  end)
 
   -- PostgreSQL only, and only in projects with a postgres-language-server.jsonc
   -- (nvim-lspconfig's root marker; workspace_required). Not installed by
