@@ -11,7 +11,11 @@ return {
   plugins = {
     {
       src = "https://github.com/MeanderingProgrammer/render-markdown.nvim",
-      config = function() require("render-markdown").setup({}) end,
+      config = function()
+        -- Hide the # markers entirely (empty icons overlay them with blanks);
+        -- the heading highlight colours alone show the level.
+        require("render-markdown").setup({ heading = { icons = { "", "", "", "", "", "" } } })
+      end,
     },
   },
   setup = function()

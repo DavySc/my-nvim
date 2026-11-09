@@ -96,6 +96,10 @@ if machine.langs.markdown then
   check("render-markdown loaded with markdown", lazy.is_loaded("render-markdown.nvim"))
   check("markdown wraps", vim.wo.wrap and vim.wo.linebreak)
 end
+if machine.langs.sql then
+  open("q.sql")
+  check("sql: dbbliss declared", lazy.is_loaded("dbbliss.nvim") or pcall(vim.cmd, "packadd dbbliss.nvim"))
+end
 check("completion loaded with the first server", lazy.is_loaded("nvim-cmp"))
 check("cmp sources registered", pcall(function()
   local names = vim.tbl_map(function(s) return s.name end, require("cmp").core:get_sources())

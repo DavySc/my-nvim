@@ -7,6 +7,8 @@
 ---@class Machine
 ---@field name string shown nowhere important; handy in `extra` and :lua print()
 ---@field langs table<string, boolean> lua/lang/<name>.lua to use; a language that's off is never loaded or installed
+---@field sql { dialect: "tsql"|"postgres" } default for .sql buffers that don't say otherwise
+---@field dbbliss table passed to require("dbbliss").setup() (connections etc.)
 ---@field tools { install: boolean } let mason install missing tools for the enabled languages
 ---@field extra? fun() runs last, after everything else is set up
 
@@ -22,8 +24,11 @@ local defaults = {
     glsl = true,
     markdown = true,
     org = true,
+    sql = true,
   },
   tools = { install = true },
+  sql = { dialect = "postgres" },
+  dbbliss = { connections = {} },
 }
 
 local ok, overrides = pcall(require, "local")

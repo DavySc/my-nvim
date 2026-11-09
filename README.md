@@ -45,6 +45,7 @@ won't be set up twice). A new plugin is installed and loaded on the spot.
 | GLSL | glsl_analyzer | clang-format (with a `.clang-format`) | |
 | Rust | rust-analyzer (through `nix develop` in flakes) | rustfmt | codelldb |
 | Markdown | marksman | prettier (`:Format` only) | |
+| SQL (T-SQL, PostgreSQL) | dbbliss.nvim (run, live completion, plans, schema tree; `:Dbbliss`), postgres_lsp where a project configures it | sqlfluff | |
 | Nix, Lua | nil, lua_ls | nixfmt, stylua | |
 | Org | (nvim-orgmode) | | agenda `<leader>oa`, capture `<leader>oc` |
 
