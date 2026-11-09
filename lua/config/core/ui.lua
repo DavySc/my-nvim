@@ -16,6 +16,7 @@ local groups = {
   { "<leader>x", group = "diagnostics" },
   { "<leader>c", group = "code" },
   { "<leader>a", group = "ai (Claude)", mode = { "n", "v" } },
+  { "<leader>u", group = "ui toggles" },
 }
 
 --- Add a which-key group (e.g. a language's <leader> prefix).
@@ -42,12 +43,19 @@ function M.declare()
       if Snacks and Snacks.did_setup then return end
       require("snacks").setup({
         bigfile = { enabled = true },
+        -- Images and rendered LaTeX math in org and markdown buffers, in
+        -- terminals with the kitty graphics protocol (kitty, Ghostty,
+        -- WezTerm); elsewhere it does nothing. Math needs tectonic or
+        -- pdflatex, and ImageMagick.
+        image = { enabled = true },
         dashboard = {
           enabled = true,
           -- Snacks' own "startup" section asks lazy.nvim for its numbers,
           -- which this config doesn't have; this one asks config.lazy.
           sections = {
-            { section = "header" },
+            -- The kittymax cat, animated (config/core/splash.lua); it leaves
+            -- 18 lines for the keys and the footer below it.
+            require("config.core.splash").section(18),
             { section = "keys", gap = 1, padding = 1 },
             function()
               local n, count = lazy.stats()
@@ -99,6 +107,7 @@ function M.declare()
 end
 
 function M.setup()
+  require("config.core.splash").setup()
   -- which-key is only useful once you're typing; load it right after the UI.
   vim.api.nvim_create_autocmd("UIEnter", {
     group = vim.api.nvim_create_augroup("config-ui", { clear = true }),

@@ -20,6 +20,8 @@ local core = {
   require("config.core.ai"),
   require("config.core.multicursor"),
   require("config.core.reload"),
+  require("config.core.kitten"),
+  require("config.core.files"),
 }
 
 ---@class Lang

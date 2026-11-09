@@ -1,6 +1,9 @@
 -- gitsigns: signs in the gutter + hunk actions on <leader>h (loaded with the
--- first file). snacks pickers: browse status/log/diff. neogit: the full
--- commit/push UI, loaded on <leader>gg or :Neogit.
+-- first file). snacks pickers: browse status/log/diff. neogit: magit, set up
+-- the way kittymax had magit (in the window you're in, saving the repo's
+-- buffers first, word-level diff highlights, diffs and commits beside it),
+-- loaded on <leader>gg or :Neogit. diffview: magit-style diffs inside neogit,
+-- and a file's history on <leader>gh (kittymax's git-timemachine).
 
 local lazy = require("config.lazy")
 
@@ -36,15 +39,54 @@ function M.declare()
     end,
   })
   lazy.add({
+    src = "https://github.com/sindrets/diffview.nvim",
+    cmd = { "Diffview*" },
+    config = function() require("diffview").setup({ enhanced_diff_hl = true }) end,
+  })
+  lazy.add({
     src = "https://github.com/NeogitOrg/neogit",
     cmd = { "Neogit*" },
-    config = function() require("neogit").setup({ integrations = { diffview = false, snacks = true } }) end,
+    config = function()
+      require("neogit").setup({
+        -- magit-display-buffer-same-window-except-diff: status, logs and the
+        -- commit message take this window; diffs and commits open beside it.
+        kind = "replace",
+        commit_editor = { kind = "replace", show_staged_diff = true, staged_diff_split_kind = "vsplit", spell_check = true },
+        commit_view = { kind = "vsplit" },
+        log_view = { kind = "replace" },
+        reflog_view = { kind = "replace" },
+        commit_select_view = { kind = "replace" },
+        graph_style = "unicode",
+        word_diff_highlight = true, -- magit-diff-refine-hunk 'all
+        integrations = { diffview = true, snacks = true },
+      })
+    end,
   })
 end
 
+--- magit-save-repository-buffers 'dontask: save the modified files of the
+--- current repository, without asking, before showing its status.
+local function save_repository_buffers()
+  local root = vim.fs.root(0, ".git")
+  if not root then return end
+  for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+    local name = vim.api.nvim_buf_get_name(buf)
+    if vim.bo[buf].modified and vim.bo[buf].buftype == "" and name ~= ""
+      and vim.fs.relpath(root, name) ~= nil then
+      vim.api.nvim_buf_call(buf, function() vim.cmd("silent! write") end)
+    end
+  end
+end
+
+function M.status()
+  save_repository_buffers()
+  require("neogit").open()
+end
+
 function M.setup()
-  vim.keymap.set("n", "<leader>gg", function() require("neogit").open() end, { desc = "Neogit (commit/push/…)" })
-  vim.keymap.set("n", "<leader>gG", function() Snacks.lazygit() end, { desc = "Lazygit" })
+  vim.keymap.set("n", "<leader>gg", M.status, { desc = "Neogit (magit)" })
+  vim.keymap.set("n", "<leader>gh", "<cmd>DiffviewFileHistory %<cr>", { desc = "File history (diffview)" })
+  vim.keymap.set("n", "<leader>gH", "<cmd>DiffviewFileHistory<cr>", { desc = "Repository history (diffview)" })
   vim.keymap.set("n", "<leader>gs", function() Snacks.picker.git_status() end, { desc = "Git status" })
   vim.keymap.set("n", "<leader>gl", function() Snacks.picker.git_log() end, { desc = "Git log" })
   vim.keymap.set("n", "<leader>gL", function() Snacks.picker.git_log_file() end, { desc = "Git log (file)" })
