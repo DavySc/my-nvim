@@ -130,8 +130,13 @@ it away; it only shows for the buffer you're in, never in a macro.
 ## Git and AI
 
 gitsigns in the gutter with hunk actions on `<leader>h`; `<leader>g` for
-status, log, diff, branches (snacks pickers), `<leader>gg` for neogit and
-`<leader>gG` for lazygit. `<leader>a` is Claude Code (claudecode.nvim):
+status, log, diff, branches (snacks pickers), and `<leader>gg` for neogit,
+set up like kittymax's magit: it takes the window you're in, saves the
+repository's modified files first, highlights word-level changes, shows
+diffs and commits in a split beside it and uses diffview for diffs.
+`<leader>gh` walks the current file's history (diffview, kittymax's
+git-timemachine), `<leader>gH` the repository's. Commit messages mark column
+72 and are spell checked. `<leader>a` is Claude Code (claudecode.nvim):
 toggle, add the buffer, send a selection, accept or reject a diff, and
 `<leader>ae` / `<leader>ar` / `<leader>at` in visual mode to ask for an
 explanation, a refactor or learning tips.

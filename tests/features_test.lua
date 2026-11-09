@@ -157,6 +157,34 @@ check("and oil lists it", vim.bo.filetype == "oil", vim.bo.filetype)
 local listing = table.concat(vim.api.nvim_buf_get_lines(0, 0, -1, false), "\n")
 check("with directories and hidden files", listing:find("sub/", 1, true) and listing:find(".hidden", 1, true), listing)
 
+-- ── git: neogit as magit ────────────────────────────────────────────────
+check("lazygit is gone", vim.fn.maparg("<leader>gG", "n") == "")
+check("<leader>gh: file history", vim.fn.maparg("<leader>gh", "n"):find("DiffviewFileHistory", 1, true) ~= nil)
+local repo = dir .. "/repo"
+vim.fn.mkdir(repo, "p")
+vim.fn.system({ "git", "-C", repo, "init", "-q" })
+vim.fn.writefile({ "one" }, repo .. "/in.txt")
+vim.fn.writefile({ "one" }, dir .. "/out.txt")
+vim.cmd.edit(dir .. "/out.txt")
+local outside = vim.api.nvim_get_current_buf()
+vim.api.nvim_buf_set_lines(outside, 0, -1, false, { "changed" })
+vim.cmd.edit(repo .. "/in.txt")
+local inside = vim.api.nvim_get_current_buf()
+vim.api.nvim_buf_set_lines(inside, 0, -1, false, { "changed" })
+local okstatus, errstatus = pcall(require("config.core.git").status)
+check("<leader>gg opens neogit", okstatus and lazy.is_loaded("neogit"), errstatus)
+check("it saves the repository's files first", not vim.bo[inside].modified)
+check("and leaves other files alone", vim.bo[outside].modified)
+local nconf = require("neogit.config").values
+check("neogit takes the current window", nconf.kind == "replace", nconf.kind)
+check("neogit uses diffview", nconf.integrations.diffview == true)
+pcall(vim.cmd, "DiffviewFileHistory")
+check("diffview loads on its commands", lazy.is_loaded("diffview.nvim"))
+pcall(vim.cmd, "tabonly")
+vim.api.nvim_buf_set_lines(outside, 0, -1, false, { "one" })
+vim.bo[outside].modified = false
+vim.cmd("silent! %bwipeout!")
+
 -- ── org ─────────────────────────────────────────────────────────────────
 local pretty = require("config.org_pretty")
 local function render(line)
