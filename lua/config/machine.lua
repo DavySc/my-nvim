@@ -21,6 +21,7 @@ local defaults = {
     verilog = true,
     glsl = true,
     markdown = true,
+    org = true,
   },
   tools = { install = true },
 }

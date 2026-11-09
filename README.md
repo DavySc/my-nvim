@@ -11,11 +11,13 @@ init.lua                 options, keymaps, then require("config")
 lua/config/init.lua      declares plugins, sets up core, wires languages to filetypes
 lua/config/lazy.lua      the loader: event / filetype / command / first require()
 lua/config/machine.lua   defaults, merged with lua/local.lua
-lua/config/core/*.lua    completion, lsp, treesitter, format, dap, ui, git, ai, reload
+lua/config/core/*.lua    completion, lsp, treesitter, format, dap, ui, git, ai, reload,
+                         splash (dashboard cat), kitten (on save), files (oil)
+lua/config/org_pretty.lua  \alpha → α in org buffers
 lua/config/cmake.lua     CMake driver (C/C++)
 lua/lang/<name>.lua      one per language, set up on its first buffer
 ftplugin/                buffer-local settings and build/run keys
-tests/                   tests/run.sh: smoke, multicursor, reload, startup budget
+tests/                   tests/run.sh: smoke, multicursor, reload, features, startup budget
 ```
 
 ## Per-machine settings
@@ -44,6 +46,7 @@ won't be set up twice). A new plugin is installed and loaded on the spot.
 | Rust | rust-analyzer (through `nix develop` in flakes) | rustfmt | codelldb |
 | Markdown | marksman | prettier (`:Format` only) | |
 | Nix, Lua | nil, lua_ls | nixfmt, stylua | |
+| Org | (nvim-orgmode) | | agenda `<leader>oa`, capture `<leader>oc` |
 
 Mason installs the servers and formatters it has. `verilator` and `iverilog`
 are not in mason: install them yourself (`apt install verilator iverilog`,
@@ -77,6 +80,52 @@ clang-format when the project has a `.clang-format`.
 Markdown buffers soft-wrap, render headings, lists, tables and code blocks in
 place (render-markdown.nvim) and get link and heading completion from
 marksman. `:Format` runs prettier; saving never reformats.
+
+## Org and LaTeX
+
+`.org` files get nvim-orgmode, set up like kittymax: notes in `~/org`, an
+inbox (`<leader>oc` captures a task `t`, a note `n` or a journal entry `j`
+into a datetree), TODO / NEXT / WAIT / DONE / CANCELLED, and the agenda on
+`<leader>oa` from anywhere. Headings get bullets, emphasis markers and link
+targets are hidden, and the line under the cursor always shows the text as
+typed (org-appear's behaviour).
+
+LaTeX shows two ways:
+
+- **Symbols**, everywhere: `\alpha` → α, `\to` → →, `x^{2}` → x², `a_{ij}`
+  → aᵢⱼ (org-pretty-entities; sub- and superscripts need braces). Src and
+  example blocks, `: fixed-width` lines and `=verbatim=` stay as typed.
+  `<leader>up` turns it off.
+- **Rendered math**, in kitty, Ghostty and WezTerm: `$...$`, `\(...\)`,
+  `\[...\]`, `\begin{...}` and equation blocks become typeset images
+  (snacks.image). It needs `tectonic` or `pdflatex`, and ImageMagick; check
+  with `:checkhealth snacks`. Markdown gets images and math the same way.
+
+orgmode builds its treesitter grammar the first time you open an org file
+(git and a C compiler).
+
+## Files: oil
+
+oil.nvim replaces netrw: a directory is a buffer you edit like any other.
+Rename by changing a line, delete with `dd`, create with a new line (ending
+in `/` for a directory), move with cut and paste between oil buffers, then
+`:w` applies it all. `-` opens the parent of the current file (and goes up
+again inside oil), `<CR>` opens, `<C-p>` previews, `g.` hides dotfiles,
+`gd` shows sizes, dates and permissions, `ga` jumps to home, projects,
+nixos-config or `~/.config`. `nvim .`, `:e dir`, `:Ex` and `<leader>pv` all
+open it. The snacks explorer (`<leader>e`) is still there as a sidebar.
+
+## Dashboard cat and the kitten
+
+The dashboard is kittymax's cat: generated to fit the window, catppuccin
+colours shimmering down its outline, blinking, twitching an ear and
+wiggling its whiskers. The timer only runs while the dashboard is on screen
+and stops after five minutes.
+
+Saving a file has a kitten in the bottom right give you a paw (about a
+second, then `=^.^= saved file` stays in the message area). Any key sends
+it away; it only shows for the buffer you're in, never in a macro.
+`<leader>uk` turns it off, `:KittenPaw` asks for one.
 
 ## Git and AI
 

@@ -19,15 +19,11 @@ vim.opt.clipboard = "unnamedplus"
 vim.opt.shiftwidth = 4
 vim.opt.termguicolors = true
 
--- netrw
-vim.g.netrw_banner = 0
-vim.g.netrw_liststyle = 3
-
 -- Keymaps
 vim.keymap.set("n", "<space><space>x", "<cmd>source %<CR>")
 vim.keymap.set("n", "<space>x", ":.lua<CR>")
 vim.keymap.set("v", "<space>x", ":.lua<CR>")
-vim.keymap.set("n", "<leader>pv", ":Ex<CR>")
+-- <leader>pv and :Ex open oil (lua/config/core/files.lua), which replaces netrw.
 
 -- Highlight on yank
 vim.api.nvim_create_autocmd("TextYankPost", {
