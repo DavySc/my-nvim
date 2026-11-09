@@ -6,6 +6,9 @@ local lazy = require("config.lazy")
 
 local M = {}
 
+---@type { n: integer, count: integer, ms: number }?
+local footer_stats
+
 ---@type table[] which-key group specs added by other modules
 local groups = {
   { "<leader>g", group = "git" },
@@ -58,8 +61,14 @@ function M.declare()
             require("config.core.splash").section(18),
             { section = "keys", gap = 1, padding = 1 },
             function()
-              local n, count = lazy.stats()
-              local ms = (vim.uv.hrtime() - (vim.g.config_start_ns or vim.uv.hrtime())) / 1e6
+              -- Measured once: the dashboard redraws with the animation, and
+              -- a live clock would keep counting up.
+              if not footer_stats then
+                local n, count = lazy.stats()
+                local ms = (vim.uv.hrtime() - (vim.g.config_start_ns or vim.uv.hrtime())) / 1e6
+                footer_stats = { n = n, count = count, ms = ms }
+              end
+              local n, count, ms = footer_stats.n, footer_stats.count, footer_stats.ms
               return {
                 align = "center",
                 text = {
@@ -72,13 +81,15 @@ function M.declare()
             end,
           },
         },
-        indent = { enabled = true },
+        -- No animation while navigating: the indent guides draw at once and
+        -- scrolling jumps instead of gliding.
+        indent = { enabled = true, animate = { enabled = false } },
         input = { enabled = true },
         picker = { enabled = true },
         notifier = { enabled = true },
         quickfile = { enabled = true },
         scope = { enabled = true },
-        scroll = { enabled = true },
+        scroll = { enabled = false },
         statuscolumn = { enabled = true },
         words = { enabled = true },
       })
