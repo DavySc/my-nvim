@@ -10,6 +10,9 @@ return {
   -- Set false on a machine where tools come from elsewhere (nix, IT images).
   tools = { install = true },
 
+  -- Spell-checked languages in markdown.
+  -- spelllang = "en,nl",
+
   -- Dialect for .sql buffers that don't say otherwise.
   sql = { dialect = "tsql" },
 

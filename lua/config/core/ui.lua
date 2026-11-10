@@ -98,11 +98,39 @@ function M.declare()
   lazy.add({
     src = "https://github.com/echasnovski/mini.nvim",
     lazy = false,
-    config = function() require("mini.statusline").setup({ use_icons = true }) end,
+    config = function()
+      require("mini.statusline").setup({ use_icons = true })
+      -- Additions to vim's grammar, each an operator or a text object:
+      -- ga{motion}{char} aligns (Kakoune's &): gaip= lines up a SET list.
+      require("mini.align").setup()
+      -- a/i objects for arguments (cia: one item of (a, b, c)), calls (af) and
+      -- the next/last pair (ciN(, ciL"). The next/last suffixes are N/L because
+      -- Neovim 0.12 already uses van / vin for treesitter nodes.
+      require("mini.ai").setup({
+        n_lines = 200,
+        mappings = { around_next = "aN", inside_next = "iN", around_last = "aL", inside_last = "iL" },
+      })
+      -- vim-surround's keys: ys{motion}{char} adds, cs{old}{new} changes,
+      -- ds{char} deletes; gs in visual mode surrounds the selection. Flash keeps s.
+      require("mini.surround").setup({
+        mappings = {
+          add = "ys", delete = "ds", replace = "cs",
+          find = "", find_left = "", highlight = "", update_n_lines = "",
+          suffix_last = "", suffix_next = "",
+        },
+        search_method = "cover_or_next",
+        -- ys iw * makes **bold** in markdown; ys iw ] makes a [T-SQL] name.
+        custom_surroundings = {
+          ["*"] = { input = { "%*%*().-()%*%*" }, output = { left = "**", right = "**" } },
+        },
+      })
+      -- y in visual mode must yank at once, not wait for ys.
+      pcall(vim.keymap.del, "x", "ys")
+      vim.keymap.set("x", "gs", [[:<C-u>lua MiniSurround.add("visual")<CR>]], { silent = true, desc = "Surround selection" })
+    end,
   })
   -- Eager: setup() also takes over f/t/F/T, which should work from the start.
   lazy.add({ src = "https://github.com/folke/flash.nvim", lazy = false, config = function() require("flash").setup({}) end })
-  lazy.add("https://github.com/chrisgrieser/nvim-spider")
   lazy.add({
     src = "https://github.com/folke/trouble.nvim",
     cmd = { "Trouble" },
@@ -130,26 +158,31 @@ function M.setup()
   vim.keymap.set("n", "<leader>,", function() Snacks.picker.buffers() end, { desc = "Buffers" })
   vim.keymap.set("n", "<leader>ff", function() Snacks.picker.smart() end, { desc = "Find Files" })
   vim.keymap.set("n", "<leader>e", function() Snacks.explorer() end, { desc = "File Explorer" })
-  vim.keymap.set("n", "gd", function() Snacks.picker.lsp_definitions() end, { desc = "Goto Definition" })
-  vim.keymap.set("n", "gD", function() Snacks.picker.lsp_declarations() end, { desc = "Goto Declaration" })
-  vim.keymap.set("n", "gr", function() Snacks.picker.lsp_references() end, { nowait = true, desc = "References" })
-  vim.keymap.set("n", "gI", function() Snacks.picker.lsp_implementations() end, { desc = "Goto Implementation" })
+  -- gd, gD and the gr* keys are set per buffer when a language server attaches
+  -- (config/core/lsp.lua); elsewhere they stay vim's own.
+  vim.keymap.set("n", "<leader>fr", function() Snacks.picker.registers() end, { desc = "Registers" })
+  vim.keymap.set("n", "<leader>uz", function() Snacks.zen() end, { desc = "Zen (writing room)" })
+  -- Neovim's own undo tree (0.12+); 'undofile' keeps the history across restarts.
+  vim.keymap.set("n", "<leader>uu", function()
+    if vim.fn.exists(":Undotree") == 0 then pcall(vim.cmd.packadd, "nvim.undotree") end
+    if vim.fn.exists(":Undotree") == 2 then
+      vim.cmd.Undotree()
+    else
+      vim.notify("No :Undotree in this Neovim (0.12+)", vim.log.levels.WARN)
+    end
+  end, { desc = "Undo tree" })
   local function float_term() Snacks.terminal.toggle(nil, { win = { position = "float", border = "rounded" } }) end
   -- Most terminals send Ctrl+/ as <C-_> (0x1F), so map both spellings.
   vim.keymap.set({ "n", "t" }, "<c-/>", float_term, { desc = "Floating terminal" })
   vim.keymap.set({ "n", "t" }, "<c-_>", float_term, { desc = "which_key_ignore" })
   vim.keymap.set("n", "<leader>ft", float_term, { desc = "Floating terminal" })
 
-  -- ── Motions: flash + spider ───────────────────────────────────────────
+  -- ── Motions: flash ────────────────────────────────────────────────────
   vim.keymap.set({ "n", "x", "o" }, "s", function() require("flash").jump() end, { desc = "Flash" })
   vim.keymap.set({ "n", "x", "o" }, "S", function() require("flash").treesitter() end, { desc = "Flash Treesitter" })
   vim.keymap.set("o", "r", function() require("flash").remote() end, { desc = "Remote Flash" })
   vim.keymap.set({ "o", "x" }, "R", function() require("flash").treesitter_search() end, { desc = "Treesitter Search" })
   vim.keymap.set("c", "<c-s>", function() require("flash").toggle() end, { desc = "Toggle Flash Search" })
-
-  -- Note: <leader>e is the file explorer (above), so spider only takes w/b here.
-  vim.keymap.set({ "n", "o", "x" }, "<leader>w", function() require("spider").motion("w") end, { desc = "Spider-w" })
-  vim.keymap.set({ "n", "o", "x" }, "<leader>b", function() require("spider").motion("b") end, { desc = "Spider-b" })
 
   -- ── Diagnostics (trouble) ─────────────────────────────────────────────
   vim.keymap.set("n", "<leader>xx", "<cmd>Trouble diagnostics toggle<cr>", { desc = "Diagnostics (Trouble)" })

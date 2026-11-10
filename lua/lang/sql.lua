@@ -9,6 +9,7 @@
 local M = {}
 
 local ENGINE_DIALECT = { postgres = "postgres", sqlserver = "tsql" }
+local DIALECT_ENGINE = { postgres = "postgres", tsql = "sqlserver" }
 local EXT_DIALECT = { pgsql = "postgres", psql = "postgres", tsql = "tsql" }
 
 ---@type Machine
@@ -21,7 +22,11 @@ local machine
 ---@param bufnr integer
 ---@return "tsql"|"postgres" dialect, boolean explicit
 function M.dialect(bufnr)
-  local ok, conn = pcall(function() return require("dbbliss")._completion_connection(bufnr) end)
+  local ok, conn = pcall(function()
+    local db = require("dbbliss")
+    -- connection_of is the public form (dbbliss decision 80); older versions only had the private one.
+    return db.connection_of and db.connection_of(bufnr) or db._completion_connection(bufnr)
+  end)
   if ok and conn and ENGINE_DIALECT[conn.engine] then return ENGINE_DIALECT[conn.engine], true end
   local ext = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(bufnr), ":e"):lower()
   if EXT_DIALECT[ext] then return EXT_DIALECT[ext], true end
@@ -53,7 +58,16 @@ M.plugins = {
     -- .NET 10 SDK); asynchronous, reports when done. :checkhealth dbbliss.
     build = function() require("dbbliss.build").run() end,
     config = function()
-      require("dbbliss").setup(require("config.machine").dbbliss)
+      -- With no connection open (the usual case here), completion still offers
+      -- the keywords of the buffer's dialect; nothing is sent anywhere.
+      -- Object info lives on K (after/ftplugin/sql.lua), not <M-F1>.
+      local opts = vim.tbl_deep_extend("keep", require("config.machine").dbbliss, {
+        mappings = { info = false },
+        completion = {
+          offline_engine = function(bufnr) return DIALECT_ENGINE[(M.dialect(bufnr))] end,
+        },
+      })
+      require("dbbliss").setup(opts)
       local completion = require("config.core.completion")
       completion.load()
       require("cmp").register_source("dbbliss", require("dbbliss.completion.cmp").new())
@@ -65,6 +79,9 @@ M.plugins = {
 ---@param m Machine
 function M.declare(m)
   machine = m
+  -- Neovim's SQL ftplugin maps 13 insert keys that start with <C-c> (its old
+  -- omni completion), so <C-c> to leave insert mode waited a second.
+  vim.g.omni_sql_no_default_maps = 1
   vim.filetype.add({ extension = { pgsql = "sql", psql = "sql", tsql = "sql" } })
 end
 

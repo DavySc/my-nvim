@@ -18,10 +18,22 @@ return {
       end,
     },
   },
+  declare = function()
+    -- Heading folds from Neovim's markdown ftplugin (ftplugin/markdown.lua opens them).
+    vim.g.markdown_folding = 1
+  end,
   setup = function()
     require("config.core.lsp").enable({ "marksman" })
+    -- Prose: links and headings from marksman, paths and snippets; buffer words
+    -- only from the fourth letter, so a sentence doesn't pop a menu per letter.
+    require("config.core.completion").source(
+      "markdown",
+      { { name = "nvim_lsp" }, { name = "path" }, { name = "luasnip" } },
+      { { name = "buffer", keyword_length = 4 } }
+    )
     local format = require("config.core.format")
-    format.add({ markdown = { "prettier" } })
+    -- "injected": each fenced block through its own formatter (SQL via sqldiff).
+    format.add({ markdown = { "prettier", "injected" } })
     format.guard({ "markdown" }, function() return false end)
   end,
 }

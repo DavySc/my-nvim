@@ -76,10 +76,21 @@ function M.setup()
     desc = "LSP keymaps",
     callback = function(ev)
       local opts = { buffer = ev.buf, silent = true }
-      vim.keymap.set("n", "K", vim.lsp.buf.hover, opts)
-      vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, opts)
-      vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, opts)
-      vim.keymap.set("i", "<C-k>", vim.lsp.buf.signature_help, opts)
+      local function map(lhs, rhs, desc)
+        vim.keymap.set("n", lhs, rhs, vim.tbl_extend("force", opts, { desc = desc }))
+      end
+      -- Buffer-local, so a buffer with no server keeps vim's own gd / gD (in
+      -- SQL, gD on a CTE's name jumps to its definition). The gr* keys are
+      -- Neovim's defaults (grn, gra, grr, gri, grt), here with pickers; signature
+      -- help is the default <C-s> in insert mode, which leaves <C-k> to digraphs.
+      -- SQL buffers keep their own K (lang/sql.lua: object info, else hover).
+      if vim.bo[ev.buf].filetype ~= "sql" then map("K", vim.lsp.buf.hover, "Hover") end
+      map("gd", function() Snacks.picker.lsp_definitions() end, "Goto Definition")
+      map("gD", function() Snacks.picker.lsp_declarations() end, "Goto Declaration")
+      map("grr", function() Snacks.picker.lsp_references() end, "References")
+      map("gri", function() Snacks.picker.lsp_implementations() end, "Goto Implementation")
+      map("<leader>ca", vim.lsp.buf.code_action, "Code action")
+      map("<leader>rn", vim.lsp.buf.rename, "Rename")
 
       local client = vim.lsp.get_client_by_id(ev.data.client_id)
       if client and client:supports_method("textDocument/inlayHint") then

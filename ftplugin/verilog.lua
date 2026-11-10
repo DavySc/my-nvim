@@ -4,7 +4,8 @@
 --   :make        -- verilator --lint-only on this file (quickfix)
 --   :VerilogRun  -- iverilog this file (a testbench, usually) and run it with
 --                   vvp in a terminal; compile errors go to the quickfix list
--- <leader>mm lints, <leader>mr runs. Neither tool comes from mason: install
+--   :VerilogWave -- the newest .vcd / .fst here in Surfer or GTKWave
+-- <leader>mm lints, <leader>mr runs, <leader>mw shows the waveform. Neither tool comes from mason: install
 -- verilator and iverilog (Icarus) yourself.
 
 vim.bo.commentstring = "// %s"
@@ -75,16 +76,43 @@ vim.api.nvim_buf_create_user_command(0, "VerilogRun", function(opts)
   verilog_run(opts.fargs)
 end, { nargs = "*", desc = "Compile the current file with iverilog and run it with vvp" })
 
+--- Open the newest waveform (.vcd or .fst) next to this file, or under it, in
+--- Surfer or GTKWave, whichever is installed. A testbench writes one with
+--- $dumpfile / $dumpvars (the `tb` snippet does).
+local function verilog_wave()
+  local dir = vim.fs.dirname(vim.api.nvim_buf_get_name(0))
+  local newest, mtime = nil, -1
+  for _, f in ipairs(vim.fs.find(function(name) return name:match("%.vcd$") or name:match("%.fst$") end,
+    { path = dir, type = "file", limit = math.huge })) do
+    local st = vim.uv.fs_stat(f)
+    if st and st.mtime.sec > mtime then newest, mtime = f, st.mtime.sec end
+  end
+  if not newest then
+    return vim.notify("verilog: no .vcd or .fst here; does the testbench call $dumpfile?", vim.log.levels.WARN)
+  end
+  local viewer = vim.fn.executable("surfer") == 1 and "surfer" or vim.fn.executable("gtkwave") == 1 and "gtkwave" or nil
+  if not viewer then
+    return vim.notify("verilog: install surfer or gtkwave to view " .. vim.fs.basename(newest), vim.log.levels.WARN)
+  end
+  vim.system({ viewer, newest }, { cwd = dir, detach = true })
+  vim.notify("verilog: " .. viewer .. " " .. vim.fs.basename(newest))
+end
+
+vim.api.nvim_buf_create_user_command(0, "VerilogWave", verilog_wave, { desc = "Open the newest waveform in Surfer or GTKWave" })
+
 local function map(lhs, rhs, desc)
   vim.keymap.set("n", lhs, rhs, { buffer = 0, silent = true, desc = desc })
 end
 
 map("<leader>mm", "<cmd>make<cr>", "Verilog: lint (verilator)")
 map("<leader>mr", "<cmd>VerilogRun<cr>", "Verilog: run (iverilog + vvp)")
+map("<leader>mw", "<cmd>VerilogWave<cr>", "Verilog: waveform (surfer / gtkwave)")
 
 vim.b.undo_ftplugin = table.concat({
   "setlocal commentstring< comments< foldmethod< foldexpr< foldlevel< makeprg< errorformat<",
   "silent! delcommand -buffer VerilogRun",
+  "silent! delcommand -buffer VerilogWave",
+  "silent! nunmap <buffer> <leader>mw",
   "silent! nunmap <buffer> <leader>mm",
   "silent! nunmap <buffer> <leader>mr",
 }, " | ")
