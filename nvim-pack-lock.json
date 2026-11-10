@@ -41,7 +41,7 @@
       "src": "https://github.com/saecki/crates.nvim"
     },
     "dbbliss.nvim": {
-      "rev": "683cd1c857dc728d30cbdd8b1c1b30012b67b172",
+      "rev": "59bf370dd2aa28ba19494c7c0b5a890c799399a8",
       "src": "https://github.com/DavySc/dbbliss.nvim"
     },
     "diffview.nvim": {
