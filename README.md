@@ -14,10 +14,13 @@ lua/config/machine.lua   defaults, merged with lua/local.lua
 lua/config/core/*.lua    completion, lsp, treesitter, format, dap, ui, git, ai, reload,
                          splash (dashboard cat), kitten (on save), files (oil)
 lua/config/org_pretty.lua  \alpha → α in org buffers
+lua/config/sql_statements.lua  iq / aq / ]] / [[ in SQL (after/ftplugin/sql.lua)
+lua/config/markdown_lists.lua, edit_block.lua  markdown lists, code blocks in their own buffer
+snippets/<filetype>.lua  LuaSnip snippets (SQL, Verilog)
 lua/config/cmake.lua     CMake driver (C/C++)
 lua/lang/<name>.lua      one per language, set up on its first buffer
 ftplugin/                buffer-local settings and build/run keys
-tests/                   tests/run.sh: smoke, multicursor, reload, features, startup budget
+tests/                   tests/run.sh: smoke, multicursor, reload, features, editing, startup budget
 ```
 
 ## Per-machine settings
@@ -45,7 +48,8 @@ won't be set up twice). A new plugin is installed and loaded on the spot.
 | GLSL | glsl_analyzer | clang-format (with a `.clang-format`) | |
 | Rust | rust-analyzer (through `nix develop` in flakes) | rustfmt | codelldb |
 | Markdown | marksman | prettier (`:Format` only) | |
-| SQL (T-SQL, PostgreSQL) | dbbliss.nvim (run, live completion, plans, schema tree; `:Dbbliss`), postgres_lsp where a project configures it | sqlfluff | |
+| SQL (T-SQL, PostgreSQL) | dbbliss.nvim (run, completion with or without a connection, plans, schema tree; `:Dbbliss`), postgres_lsp where a project configures it | sqldiff / sqlfluff | |
+| Soufflé | (syntax file) | | `:make`, `:SouffleRun` |
 | Nix, Lua | nil, lua_ls | nixfmt, stylua | |
 | Org | (nvim-orgmode) | | agenda `<leader>oa`, capture `<leader>oc` |
 
@@ -61,9 +65,37 @@ are not in mason: install them yourself (`apt install verilator iverilog`,
 | --- | --- |
 | `<leader>mm` | `:make`: `verilator --lint-only -Wall` on the file; findings go to the quickfix list |
 | `<leader>mr` | `:VerilogRun [plusargs]`: `iverilog -g2012` the file (modules it instantiates are found next to it), then `vvp` in a terminal |
+| `<leader>mw` | `:VerilogWave`: the newest `.vcd` / `.fst` here in Surfer or GTKWave |
 
-Write a testbench per chip, open it, `<leader>mr`. Compile errors open the
-quickfix list instead of the terminal.
+Write a testbench per chip (the `tb` snippet dumps a VCD), open it,
+`<leader>mr`, then `<leader>mw`. Compile errors open the quickfix list
+instead of the terminal. Snippets: `aff` (always_ff), `acomb`, `fsm`, `tb`.
+
+## SQL
+
+Most SQL here is written without a connection, so the SQL setup works
+offline: completion offers the keywords of the buffer's dialect (T-SQL or
+PostgreSQL: the connection's engine, `.tsql` / `.pgsql`, `b:sql_dialect`, then
+`sql.dialect` in `lua/local.lua`), and names once you `:Dbbliss connect`.
+
+| Key | What |
+| --- | --- |
+| `iq` / `aq` | inside / around the statement: `yaq` copies it to run elsewhere, `daq` deletes it |
+| `]]` / `[[` | next / previous statement |
+| `gq{motion}` | format through sqldiff / sqlfluff: `gqaq` one statement |
+| `K` | object info (with a connection), else hover |
+| `gD` | vim's own: the first use of the word, e.g. a CTE's definition |
+
+Statements end at `;`, blank lines and T-SQL `GO` lines, never inside
+strings or comments (dbbliss's splitter). Snippets: `cte`, `sel`, `txtest`
+(begin ... rollback), `upsert` (`on conflict` or `merge` by dialect), `proc`,
+`fn`, `dropif`.
+
+## Soufflé
+
+`<leader>mm` runs `souffle` through `:make` (errors to the quickfix list),
+`<leader>mr` (`:SouffleRun [args]`) runs it in a terminal with facts from the
+file's directory. `.facts` files keep their Tabs.
 
 ## C / C++
 
@@ -80,7 +112,18 @@ clang-format when the project has a `.clang-format`.
 
 Markdown buffers soft-wrap, render headings, lists, tables and code blocks in
 place (render-markdown.nvim) and get link and heading completion from
-marksman. `:Format` runs prettier; saving never reformats.
+marksman; buffer words only from the fourth letter. `:Format` runs prettier,
+and each fenced block through its own formatter; saving never reformats.
+
+- Lists continue: `<CR>` at the end of an item and `o` on one start the next
+  (`- `, `2. `, `- [ ] `); `<CR>` on an empty item ends the list.
+- `j` / `k` move by screen line (with a count, by real lines); spelling is on
+  (`]s`, `z=`; languages from `spelllang` in `lua/local.lua`).
+- Headings fold (`zM` outline, `zR` all, `za` one); `gO` lists them, `]]` /
+  `[[` jump.
+- `<leader>ce` inside a fence edits the block in its own buffer with the
+  fence's filetype (Emacs's `C-c '`); `:w` writes it back into the note.
+- `<leader>uz` is a writing room (snacks zen).
 
 ## Org and LaTeX
 
@@ -149,6 +192,27 @@ at every match (`zq*`, `zqgn`), `q=` toggles follow mode, `CTRL-L` clears,
 `gQ` restores, `]C`/`[C` jump between them. On top of that, `<C-n>` adds a
 cursor on the word and jumps to its next match (VS Code's Ctrl-D), and
 `<leader>M` puts one on every match of the word. Nothing changes on 0.12.
+
+## Editing
+
+Vim's keys keep their meaning: `gd` / `gD` are vim's own except where a
+language server runs, `<C-k>` in insert mode is digraphs (signature help is
+`<C-s>`), and LSP uses Neovim's `grn` / `gra` / `grr` / `gri`. Additions:
+
+| Key | What |
+| --- | --- |
+| `ys{motion}{char}`, `cs`, `ds`, visual `gs` | surround (mini.surround with vim-surround's keys); `*` makes `**bold**` |
+| `ga{motion}{char}` | align (mini.align): `gaip=` |
+| `a` / `i` objects | mini.ai: `cia` an argument, `af` a call, `ciN(` the next pair |
+| `van` / `vin` | grow / shrink the selection by syntax node (Neovim 0.12) |
+| `<leader>uu` | undo tree (history kept across restarts) |
+| `<leader>fr` | registers |
+| `<leader>X` | run the line (or selection) as Lua |
+
+Enter accepts a completion only after you picked one (`<C-n>` / `<C-p>`);
+`<C-y>` accepts, `<C-e>` closes. `:s` previews as you type. `:PackClean`
+deletes installed plugins the config no longer declares (vim.pack keeps them,
+and keeps them in the lock file, until then).
 
 ## Tests
 

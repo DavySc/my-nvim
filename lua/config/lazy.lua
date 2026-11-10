@@ -97,6 +97,18 @@ function M.load(name)
   end
 end
 
+--- Installed plugins this config no longer declares (vim.pack keeps them, and
+--- keeps them in the lock file, until they are deleted).
+---@return string[]
+function M.orphans()
+  local out = {}
+  for _, p in ipairs(vim.pack.get()) do
+    if not specs[p.spec.name] then out[#out + 1] = p.spec.name end
+  end
+  table.sort(out)
+  return out
+end
+
 --- Plugins loaded so far, and declared in all.
 ---@return integer loaded, integer count
 function M.stats()
@@ -220,6 +232,12 @@ function M.install()
       end
     end
   end
+  vim.api.nvim_create_user_command("PackClean", function()
+    local gone = M.orphans()
+    if #gone == 0 then return vim.notify("vim.pack: nothing to clean") end
+    local msg = "Delete plugins this config no longer uses?\n" .. table.concat(gone, ", ")
+    if vim.fn.confirm(msg, "&Delete\n&Keep", 2) == 1 then vim.pack.del(gone) end
+  end, { desc = "Delete installed plugins the config no longer declares" })
   for i, s in ipairs(package.loaders) do
     if s == state.searcher then
       table.remove(package.loaders, i)

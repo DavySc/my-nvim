@@ -10,6 +10,7 @@
 ---@field sql { dialect: "tsql"|"postgres" } default for .sql buffers that don't say otherwise
 ---@field dbbliss table passed to require("dbbliss").setup() (connections etc.)
 ---@field tools { install: boolean } let mason install missing tools for the enabled languages
+---@field spelllang string languages spell-checked in markdown, e.g. "en,nl"
 ---@field extra? fun() runs last, after everything else is set up
 
 ---@type Machine
@@ -28,6 +29,7 @@ local defaults = {
     souffle = true,
   },
   tools = { install = true },
+  spelllang = "en",
   sql = { dialect = "postgres" },
   dbbliss = { connections = {} },
 }
