@@ -18,9 +18,10 @@ lua/config/sql_statements.lua  iq / aq / ]] / [[ in SQL (after/ftplugin/sql.lua)
 lua/config/markdown_lists.lua, edit_block.lua  markdown lists, code blocks in their own buffer
 snippets/<filetype>.lua  LuaSnip snippets (SQL, Verilog)
 lua/config/cmake.lua     CMake driver (C/C++)
+lua/config/lean.lua      Lake builds, new projects, Lean pickers (unicode, Loogle, library)
 lua/lang/<name>.lua      one per language, set up on its first buffer
 ftplugin/                buffer-local settings and build/run keys
-tests/                   tests/run.sh: smoke, multicursor, reload, features, editing, startup budget
+tests/                   tests/run.sh: smoke, multicursor, reload, features, editing, lean, startup budget
 ```
 
 ## Per-machine settings
@@ -52,6 +53,7 @@ won't be set up twice). A new plugin is installed and loaded on the spot.
 | Soufflé | (syntax file) | | `:make`, `:SouffleRun` |
 | Nix, Lua | nil, lua_ls | nixfmt, stylua | |
 | Org | (nvim-orgmode) | | agenda `<leader>oa`, capture `<leader>oc` |
+| Lean 4 | lean.nvim (`lake serve`), infoview | | `lake build` to quickfix, run `main`; elan, not mason |
 
 Mason installs the servers and formatters it has. `verilator` and `iverilog`
 are not in mason: install them yourself (`apt install verilator iverilog`,
@@ -124,6 +126,64 @@ and each fenced block through its own formatter; saving never reformats.
 - `<leader>ce` inside a fence edits the block in its own buffer with the
   fence's filetype (Emacs's `C-c '`); `:w` writes it back into the note.
 - `<leader>uz` is a writing room (snacks zen).
+
+## Lean 4
+
+[lean.nvim](https://github.com/Julian/lean.nvim) does what the VS Code
+extension does: the Lean server (`lake serve` in a Lake project, `lean
+--server` for a loose file), the **infoview** beside the code with the goals
+at the cursor, clickable terms and widgets, `\`-abbreviations for unicode,
+interactive hover on `K`, semantic highlighting, inlay hints for
+auto-implicits, `⚒` at the end of a line with unsolved goals and 🎉 in the
+sign column when a proof is done, and a processing bar in the sign column.
+Files under `.lake/` and the toolchains are read-only, so a stray edit can't
+break Mathlib.
+
+**Install elan once per machine** (it isn't in mason). elan puts `lean` and
+`lake` on PATH and fetches whichever Lean each project's `lean-toolchain`
+asks for, so nothing in this config pins a version.
+
+| Machine | |
+| --- | --- |
+| Linux / macOS | `curl https://elan.lean-lang.org/elan-init.sh -sSf \| sh`, then a new shell |
+| Windows | `curl -O --location https://elan.lean-lang.org/elan-init.ps1`, `powershell -ExecutionPolicy Bypass -f elan-init.ps1` |
+| NixOS | `elan` from nixpkgs (it patches the toolchains it downloads) |
+
+Lake needs `git`. Optional: `resvg` for SVG widgets in the infoview (kitty,
+Ghostty, WezTerm). `:checkhealth lean` checks the lot.
+
+**Typing**: `\a` → α, `\to` → →, `\N` → ℕ, `\<` `\>` → ⟨ ⟩, `\all` → ∀,
+`\ex` → ∃; a space or `<Tab>` ends it (`\\` types a backslash). `\\` in
+normal mode shows how to type the symbol under the cursor, `\u` searches all
+of them.
+
+| Key (normal mode, Lean buffers) | What |
+| --- | --- |
+| `K` | hover, with clickable terms inside |
+| `\i` | infoview on / off; `\<Tab>` jumps into it (`<CR>` / `K` there click a term, `gd` goes to its definition) |
+| `\x` / `\c` | pin the goal here (it stays while you move) / clear the pins |
+| `\dd` | auto-diff: the infoview shows what the last tactic changed |
+| `\s` | accept the first suggestion (`exact?`, `apply?`, `simp?` ...) |
+| `\v` | infoview options (show types, instances, hidden assumptions ...) |
+| `\r` | restart the file (after its imports were rebuilt) |
+| `\S` | a `· sorry` for each open goal, below the cursor line (fill in one at a time) |
+| `\u` | unicode symbol picker |
+| `\l` | [Loogle](https://loogle.lean-lang.org): Mathlib by name, `Real.sqrt`, or shape, `(?a + ?b) * ?c`; `<CR>` puts the name |
+| `\/` / `\f` | grep / find files in core Lean and the project's dependencies (Mathlib's sources) |
+| `<leader>mm` | `lake build`: errors and warnings, goals and all, to the quickfix list |
+| `<leader>mr` | run this file's `main` (`lake env lean --run`) |
+| `<leader>mc` | `lake exe cache get`: prebuilt Mathlib, so it never compiles here |
+| `gd`, `grr`, `grn`, `gra` | definition, references, rename, code actions (the usual LSP keys) |
+
+Commands: `:LeanNew name` starts a project in the current directory, `:LeanNew
+name math` one with Mathlib (it takes Mathlib's toolchain and downloads the
+prebuilt Mathlib). `:Lake ...` runs any lake command at the project root, e.g.
+`:Lake update` (Mathlib's update hook fetches the cache too) or `:Lake test`.
+`:LeanGoal`, `:LeanTermGoal`, `:LeanModuleImports` and the rest are lean.nvim's
+(`:help lean`).
+
+Snippets come from lean.nvim (`theorem`, `def`, `match`, ...) through LuaSnip;
+completion is the server's.
 
 ## Org and LaTeX
 

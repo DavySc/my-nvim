@@ -52,7 +52,7 @@ for _, lhs in ipairs({ "<Space>fr", "<Space>uz", "<Space>uu" }) do
   check("mapped: " .. lhs, global_map(lhs, "n"))
 end
 local lock = vim.json.decode(table.concat(vim.fn.readfile(vim.fn.stdpath("config") .. "/nvim-pack-lock.json"), "\n"))
-for _, stale in ipairs({ "lean.nvim", "otter.nvim", "roslyn.nvim", "nvim-spider" }) do
+for _, stale in ipairs({ "otter.nvim", "roslyn.nvim", "nvim-spider" }) do
   check("not in the lock file: " .. stale, lock.plugins[stale] == nil)
 end
 

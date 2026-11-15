@@ -60,6 +60,10 @@
       "rev": "8d79f2410c76e62b92e51c28c82e28c1c5a3daeb",
       "src": "https://github.com/lewis6991/gitsigns.nvim"
     },
+    "lean.nvim": {
+      "rev": "755fee701e1f289699bdc983af6d1ddce74cfb65",
+      "src": "https://github.com/Julian/lean.nvim"
+    },
     "mason.nvim": {
       "rev": "2a6940af80375532e5e9e7c1f2fc6319a1b7a69d",
       "src": "https://github.com/williamboman/mason.nvim"

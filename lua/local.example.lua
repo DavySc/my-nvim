@@ -5,7 +5,7 @@ return {
 
   -- Languages this machine never needs: not loaded, and mason won't install
   -- their tools. Everything not listed keeps its default (on).
-  langs = { nix = false, rust = false },
+  langs = { nix = false, rust = false }, -- lean = false where elan isn't installed
 
   -- Set false on a machine where tools come from elsewhere (nix, IT images).
   tools = { install = true },

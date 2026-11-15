@@ -23,6 +23,8 @@ nvim --headless -c "luafile $repo/tests/multicursor_test.lua"
 nvim --headless -c "luafile $repo/tests/reload_test.lua"
 nvim --headless -c "luafile $repo/tests/features_test.lua"
 nvim --headless -c "luafile $repo/tests/editing_test.lua"
+# Skips itself without lean / lake on PATH.
+nvim --headless -c "luafile $repo/tests/lean_test.lua"
 
 budget=${BUDGET_MS:-60}
 times=""

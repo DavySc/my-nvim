@@ -6,6 +6,9 @@ local lazy = require("config.lazy")
 
 local M = {}
 
+-- Filetypes whose buffers map their own K.
+local KEEP_K = { sql = true, lean = true }
+
 function M.declare()
   lazy.add({ src = "https://github.com/neovim/nvim-lspconfig", lazy = false })
   -- Eager but cheap: setup() only puts mason's bin/ on PATH so servers resolve.
@@ -83,8 +86,9 @@ function M.setup()
       -- SQL, gD on a CTE's name jumps to its definition). The gr* keys are
       -- Neovim's defaults (grn, gra, grr, gri, grt), here with pickers; signature
       -- help is the default <C-s> in insert mode, which leaves <C-k> to digraphs.
-      -- SQL buffers keep their own K (lang/sql.lua: object info, else hover).
-      if vim.bo[ev.buf].filetype ~= "sql" then map("K", vim.lsp.buf.hover, "Hover") end
+      -- SQL buffers keep their own K (lang/sql.lua: object info, else hover),
+      -- Lean buffers theirs (lean.nvim's hover, where terms are clickable).
+      if not KEEP_K[vim.bo[ev.buf].filetype] then map("K", vim.lsp.buf.hover, "Hover") end
       map("gd", function() Snacks.picker.lsp_definitions() end, "Goto Definition")
       map("gD", function() Snacks.picker.lsp_declarations() end, "Goto Declaration")
       map("grr", function() Snacks.picker.lsp_references() end, "References")
