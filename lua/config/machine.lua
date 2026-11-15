@@ -27,6 +27,7 @@ local defaults = {
     org = true,
     sql = true,
     souffle = true,
+    lean = true,
   },
   tools = { install = true },
   spelllang = "en",
